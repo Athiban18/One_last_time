@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card p-5 shadow-lg">
+      <div class="text-center mb-4">
+        <div class="mb-3">
+          <i class="bi bi-upload display-1"></i>
+        </div>
+        <h2 class="fw-bold mb-2">Upload Your Resume</h2>
+        <p class="text-muted">Get AI-powered feedback to improve your job prospects</p>
+      </div>
+      <form method="POST" enctype="multipart/form-data">
+        <div class="mb-4">
+          <label for="resume" class="form-label fw-semibold">Select Resume File</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-file-earmark-text"></i></span>
+            <input type="file" class="form-control" id="resume" name="resume" accept=".pdf,.docx,.doc" required>
+          </div>
+          <div class="form-text">
+            <i class="bi bi-info-circle me-1"></i>Supported formats: PDF, DOCX, DOC (Max 5MB)
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 py-3 fw-semibold">
+          <i class="bi bi-cloud-upload me-2"></i>Upload & Analyze
+        </button>
+      </form>
+      {% if feedback %}
+        <div class="mt-5">
+          <h4 class="fw-bold mb-4"><i class="bi bi-robot me-2"></i>AI Resume Screening & Career Insights</h4>
+          <!-- ATS Checklist Table -->
+          <h5 class="fw-bold mb-2">📋 ATS Optimization Checklist</h5>
+          <div class="table-responsive mb-4">
+            <table class="table table-bordered align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Section</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in ats %}
+                <tr>
+                  <td>{{ item.section }}</td>
+                  <td>{% if item.present %}<span class="badge bg-success">Present</span>{% else %}<span class="badge bg-danger">Missing</span>{% endif %}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <!-- Career Gap Analysis -->
+          <h5 class="fw-bold mb-3">🎯 Career Gap Analysis</h5>
+          <div class="row g-4 mb-4">
+            <!-- Skills You Have -->
+            <div class="col-md-6">
+              <div class="card border-success h-100">
+                <div class="card-body text-center">
+                  <div class="mb-3">
+                    <i class="bi bi-check-circle-fill text-success display-4"></i>
+                  </div>
+                  <h6 class="fw-bold text-success">Skills You Have</h6>
+                  <div class="progress mb-2" style="height: 25px;">
+                    <div class="progress-bar bg-success" role="progressbar" 
+                         style="width: {{ (feedback.skills|length / (feedback.skills|length + (feedback.feedback.missing_skills|length if feedback.feedback.missing_skills else 0))) * 100 }}%">
+                      {{ feedback.skills|length }} skills
+                    </div>
+                  </div>
+                  <small class="text-muted">You're strong in these areas</small>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Skills to Learn -->
+            <div class="col-md-6">
+              <div class="card border-warning h-100">
+                <div class="card-body text-center">
+                  <div class="mb-3">
+                    <i class="bi bi-lightbulb-fill text-warning display-4"></i>
+                  </div>
+                  <h6 class="fw-bold text-warning">Skills to Learn</h6>
+                  <div class="progress mb-2" style="height: 25px;">
+                    <div class="progress-bar bg-warning" role="progressbar" 
+                         style="width: {{ ((feedback.feedback.missing_skills|length if feedback.feedback.missing_skills else 0) / (feedback.skills|length + (feedback.feedback.missing_skills|length if feedback.feedback.missing_skills else 0))) * 100 }}%">
+                      {{ feedback.feedback.missing_skills|length if feedback.feedback.missing_skills else 0 }} skills
+                    </div>
+                  </div>
+                  <small class="text-muted">Focus on these to grow</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Career Readiness Score -->
+          <div class="card bg-light mb-4">
+            <div class="card-body text-center">
+              <h6 class="fw-bold mb-2">🎯 Career Readiness Score</h6>
+              <div class="display-4 fw-bold text-primary mb-2">
+                {{ ((feedback.skills|length / (feedback.skills|length + (feedback.feedback.missing_skills|length if feedback.feedback.missing_skills else 0))) * 100)|round|int }}%
+              </div>
+              <div class="progress mb-2" style="height: 30px;">
+                <div class="progress-bar bg-primary" role="progressbar" 
+                     style="width: {{ ((feedback.skills|length / (feedback.skills|length + (feedback.feedback.missing_skills|length if feedback.feedback.missing_skills else 0))) * 100) }}%">
+                </div>
+              </div>
+              <small class="text-muted">
+                {% set readiness = ((feedback.skills|length / (feedback.skills|length + (feedback.feedback.missing_skills|length if feedback.feedback.missing_skills else 0))) * 100)|round|int %}
+                {% if readiness >= 80 %}
+                  🚀 Excellent! You're well-prepared for your career goals
+                {% elif readiness >= 60 %}
+                  👍 Good! You're on the right track with some room to grow
+                {% elif readiness >= 40 %}
+                  📚 Fair! Focus on learning the missing skills to improve
+                {% else %}
+                  💪 Keep learning! Build your skills to reach your career goals
+                {% endif %}
+              </small>
+            </div>
+          </div>
+          
+          <!-- Quick Action Plan -->
+          <div class="card border-info">
+            <div class="card-header bg-info text-white">
+              <h6 class="fw-bold mb-0"><i class="bi bi-list-check me-2"></i>Quick Action Plan</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4 text-center mb-3">
+                  <div class="p-3">
+                    <i class="bi bi-book-fill text-primary display-5 mb-2"></i>
+                    <h6 class="fw-bold">Learn Missing Skills</h6>
+                    <small class="text-muted">Take online courses or certifications</small>
+                  </div>
+                </div>
+                <div class="col-md-4 text-center mb-3">
+                  <div class="p-3">
+                    <i class="bi bi-briefcase-fill text-success display-5 mb-2"></i>
+                    <h6 class="fw-bold">Apply to Matching Jobs</h6>
+                    <small class="text-muted">Focus on jobs where you have 70%+ match</small>
+                  </div>
+                </div>
+                <div class="col-md-4 text-center mb-3">
+                  <div class="p-3">
+                    <i class="bi bi-graph-up text-warning display-5 mb-2"></i>
+                    <h6 class="fw-bold">Track Your Progress</h6>
+                    <small class="text-muted">Monitor your skill development over time</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Profile Summary, Certifications, Soft Skills, Projects, Achievements, LinkedIn -->
+          <div class="alert alert-primary mt-4">
+            <strong>Profile Summary:</strong> {{ feedback.feedback.summary }}
+          </div>
+          {% if feedback.certifications %}
+          <div class="alert alert-info"><strong>Certifications:</strong> {{ feedback.certifications|join(', ') }}</div>
+          {% endif %}
+          {% if feedback.soft_skills %}
+          <div class="alert alert-info"><strong>Soft Skills:</strong> {{ feedback.soft_skills|join(', ') }}</div>
+          {% endif %}
+          {% if feedback.projects %}
+          <div class="alert alert-info"><strong>Projects:</strong> {{ feedback.projects|join('; ') }}</div>
+          {% endif %}
+          {% if feedback.achievements %}
+          <div class="alert alert-info"><strong>Achievements:</strong> {{ feedback.achievements|join('; ') }}</div>
+          {% endif %}
+          {% if feedback.linkedin %}
+          <div class="alert alert-info"><strong>LinkedIn:</strong> <a href="{{ feedback.linkedin }}" target="_blank">{{ feedback.linkedin }}</a></div>
+          {% endif %}
+          {% if feedback.feedback.strengths %}
+          <div class="alert alert-success">
+            <strong>Strengths:</strong>
+            <ul class="mb-0">
+              {% for s in feedback.feedback.strengths %}
+                <li>{{ s }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+          {% if feedback.feedback.missing_skills %}
+          <div class="alert alert-warning">
+            <strong>Skill Gaps:</strong>
+            <span class="text-muted">Consider learning:</span>
+            {% for ms in feedback.feedback.missing_skills %}
+              <span class="badge bg-warning text-dark">{{ ms }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if feedback.feedback.suggestions %}
+          <div class="alert alert-info">
+            <strong>Suggestions:</strong>
+            <ul class="mb-0">
+              {% for sug in feedback.feedback.suggestions %}
+                <li>{{ sug }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+          {% if feedback.feedback.formatting %}
+          <div class="alert alert-secondary">
+            <strong>Formatting Tips:</strong>
+            <ul class="mb-0">
+              {% for f in feedback.feedback.formatting %}
+                <li>{{ f }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+        </div>
+        {% if job_matches %}
+        <div class="mt-5">
+          <h4 class="fw-bold mb-3"><i class="bi bi-briefcase-fill text-primary me-2"></i>AI Job Match Analysis</h4>
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Job Title</th>
+                  <th>Match Score</th>
+                  <th>AI Reasoning</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for match in job_matches %}
+                <tr>
+                  <td>{{ match.job.title }}</td>
+                  <td><span class="badge bg-{{ 'success' if match.score > 80 else 'warning' if match.score > 60 else 'danger' }}">{{ match.score }}%</span></td>
+                  <td>{{ match.explanation }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% endif %}
+        {% if job_gaps %}
+        <div class="mt-5">
+          <h4 class="fw-bold mb-3"><i class="bi bi-exclamation-triangle text-danger me-2"></i>Skill Gap Analysis for Jobs</h4>
+          <div class="list-group">
+            {% for gap in job_gaps %}
+              <div class="list-group-item">
+                <strong>{{ gap.job.title }}</strong><br>
+                <span class="text-muted">Required Skills:</span>
+                {% for skill in gap.required %}
+                  <span class="badge bg-primary">{{ skill }}</span>
+                {% endfor %}<br>
+                <span class="text-muted">Missing Skills:</span>
+                {% if gap.missing %}
+                  {% for skill in gap.missing %}
+                    <span class="badge bg-danger">{{ skill }}</span>
+                  {% endfor %}
+                {% else %}
+                  <span class="badge bg-success">No gaps!</span>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

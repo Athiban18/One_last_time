@@ -1,0 +1,5 @@
+﻿__pycache__/
+*.pyc
+one_last_time/instance/
+one_last_time/uploads/
+.venv/

@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold text-dark mb-1">
+                        <i class="bi bi-bell me-2"></i>Job Alerts
+                    </h2>
+                    <p class="text-muted mb-0">Your personalized job notifications</p>
+                </div>
+                <div>
+                    <a href="/notification_settings" class="btn btn-outline-primary">
+                        <i class="bi bi-gear me-2"></i>Settings
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% if alerts %}
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-0">
+                        <h5 class="fw-bold text-dark mb-0">
+                            <i class="bi bi-clock-history me-2"></i>Recent Job Alerts ({{ alerts|length }})
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            {% for alert in alerts %}
+                            <div class="list-group-item border-0 px-4 py-3 {% if not alert.is_read %}bg-light{% endif %}">
+                                <div class="row align-items-center">
+                                    <div class="col-lg-8">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0 me-3">
+                                                {% if not alert.is_read %}
+                                                    <div class="bg-primary rounded-circle" style="width: 12px; height: 12px;"></div>
+                                                {% else %}
+                                                    <div class="bg-secondary rounded-circle" style="width: 12px; height: 12px;"></div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1 fw-bold">{{ alert.job.title }}</h6>
+                                                <p class="text-muted mb-1">{{ alert.job.company_name or 'Company' }}</p>
+                                                <div class="d-flex align-items-center flex-wrap gap-2">
+                                                    <span class="badge bg-success">{{ "%.1f"|format(alert.match_percentage) }}% Match</span>
+                                                    {% if alert.job.location %}
+                                                        <span class="badge bg-info">{{ alert.job.location }}</span>
+                                                    {% endif %}
+                                                    {% if alert.job.job_type %}
+                                                        <span class="badge bg-secondary">{{ alert.job.job_type }}</span>
+                                                    {% endif %}
+                                                    <small class="text-muted">{{ alert.sent_at.strftime('%b %d, %Y at %I:%M %p') }}</small>
+                                                </div>
+                                                {% if alert.match_reason %}
+                                                    <p class="text-muted small mt-2 mb-0">{{ alert.match_reason }}</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <button class="btn btn-sm btn-primary" onclick="showJobDetails({{ alert.job.id }})">
+                                                <i class="bi bi-eye me-1"></i>View Job
+                                            </button>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-three-dots"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    {% if not alert.is_read %}
+                                                        <li><a class="dropdown-item" href="/mark_alert_read/{{ alert.id }}">
+                                                            <i class="bi bi-check-circle me-2"></i>Mark as Read
+                                                        </a></li>
+                                                    {% endif %}
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item text-danger" href="/delete_alert/{{ alert.id }}" 
+                                                           onclick="return confirm('Are you sure you want to delete this alert?')">
+                                                        <i class="bi bi-trash me-2"></i>Delete Alert
+                                                    </a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <h4 class="text-primary mb-1">{{ alerts|length }}</h4>
+                                <p class="text-muted mb-0">Total Alerts</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <h4 class="text-success mb-1">{{ alerts|selectattr('is_read', 'equalto', False)|list|length }}</h4>
+                                <p class="text-muted mb-0">Unread Alerts</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <h4 class="text-info mb-1">
+                                    {% set avg_match = alerts|map(attribute='match_percentage')|list|sum / alerts|length if alerts else 0 %}
+                                    {{ "%.1f"|format(avg_match) }}%
+                                </h4>
+                                <p class="text-muted mb-0">Avg Match %</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            {% else %}
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-bell-slash display-1 text-muted mb-4"></i>
+                        <h4 class="text-muted mb-3">No Job Alerts Yet</h4>
+                        <p class="text-muted mb-4">You'll receive job alerts when matching positions are posted by recruiters.</p>
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="/notification_settings" class="btn btn-primary">
+                                <i class="bi bi-gear me-2"></i>Configure Alerts
+                            </a>
+                            <a href="/upload_resume" class="btn btn-outline-primary">
+                                <i class="bi bi-upload me-2"></i>Upload Resume
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Job Detail Modal -->
+<div class="modal fade" id="jobDetailModal" tabindex="-1" aria-labelledby="jobTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="jobTitle">Job Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="jobDetails">Loading...</div>
+                <div id="skillAnalysis" class="mt-4"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" id="applyBtn">Apply for this Job</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh every 30 seconds to check for new alerts
+    setInterval(function() {
+        location.reload();
+    }, 30000);
+});
+
+function showJobDetails(jobId) {
+    console.log('Fetching job details for ID:', jobId);
+    
+    fetch(`/job/${jobId}`)
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Job data received:', data);
+            
+            document.getElementById('jobTitle').textContent = data.job.title;
+            document.getElementById('jobDetails').innerHTML = `
+                <h6 class="fw-bold">Job Description:</h6>
+                <p>${data.job.description}</p>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Required Skills:</h6>
+                        <div class="d-flex flex-wrap gap-1">
+                            ${data.required_skills.map(skill => `<span class="badge bg-primary">${skill}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Your Skills Match:</h6>
+                        <div class="d-flex flex-wrap gap-1">
+                            ${data.matching_skills.map(skill => `<span class="badge bg-success">${skill}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Job Details:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Company:</strong> ${data.job.company_name || 'Not specified'}</li>
+                            <li><strong>Location:</strong> ${data.job.location || 'Not specified'}</li>
+                            <li><strong>Type:</strong> ${data.job.job_type || 'Not specified'}</li>
+                            <li><strong>Remote:</strong> ${data.job.remote_work || 'Not specified'}</li>
+                            <li><strong>Experience:</strong> ${data.job.experience_level || 'Not specified'}</li>
+                            <li><strong>Industry:</strong> ${data.job.industry || 'Not specified'}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Salary & Benefits:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Salary Range:</strong> 
+                                ${data.job.salary_min && data.job.salary_max ? 
+                                    `$${data.job.salary_min.toLocaleString()} - $${data.job.salary_max.toLocaleString()}` : 
+                                    'Not specified'}
+                            </li>
+                            <li><strong>Views:</strong> ${data.job.views || 0}</li>
+                            <li><strong>Requirements:</strong> ${data.job.requirements || 'Not specified'}</li>
+                            <li><strong>Benefits:</strong> ${data.job.benefits || 'Not specified'}</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            // Skill gap analysis
+            if (data.missing_skills.length > 0) {
+                document.getElementById('skillAnalysis').innerHTML = `
+                    <div class="alert alert-warning">
+                        <h6 class="fw-bold"><i class="bi bi-exclamation-triangle me-2"></i>Skills You Need to Learn:</h6>
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            ${data.missing_skills.map(skill => `<span class="badge bg-warning text-dark">${skill}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('skillAnalysis').innerHTML = `
+                    <div class="alert alert-success">
+                        <h6 class="fw-bold"><i class="bi bi-check-circle me-2"></i>Great Match!</h6>
+                        <p class="mb-0">You have all the required skills for this position.</p>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('applyBtn').onclick = () => applyToJob(jobId);
+            
+            // Check if user has already applied to this job
+            fetch(`/check_application/${jobId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const modalApplyBtn = document.getElementById('applyBtn');
+                    if (data.has_applied) {
+                        modalApplyBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Already Applied';
+                        modalApplyBtn.className = 'btn btn-success';
+                        modalApplyBtn.disabled = true;
+                        modalApplyBtn.onclick = null;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking application status:', error);
+                });
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('jobDetailModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error loading job details:', error);
+            alert('Error loading job details: ' + error.message);
+        });
+}
+
+function applyToJob(jobId) {
+    console.log('Applying to job:', jobId);
+    
+    fetch(`/apply/${jobId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Apply response:', data);
+        if (data.success) {
+            // Show success message
+            const successAlert = document.createElement('div');
+            successAlert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+            successAlert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            successAlert.innerHTML = `
+                <i class="bi bi-check-circle me-2"></i>${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(successAlert);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                if (successAlert.parentNode) {
+                    successAlert.remove();
+                }
+            }, 3000);
+            
+            // Close modal
+            const modalElement = document.getElementById('jobDetailModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            }
+        } else {
+            if (data.has_applied) {
+                // Show info message instead of error
+                const infoAlert = document.createElement('div');
+                infoAlert.className = 'alert alert-info alert-dismissible fade show position-fixed';
+                infoAlert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                infoAlert.innerHTML = `
+                    <i class="bi bi-info-circle me-2"></i>You have already applied to this job
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(infoAlert);
+                
+                // Auto-remove after 3 seconds
+                setTimeout(() => {
+                    if (infoAlert.parentNode) {
+                        infoAlert.remove();
+                    }
+                }, 3000);
+            } else {
+                // Other error
+                alert(data.message || 'Error applying to job');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error applying to job:', error);
+        alert('Error applying to job: ' + error.message);
+    });
+}
+</script>
+{% endblock %} 

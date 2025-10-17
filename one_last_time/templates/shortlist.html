@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="mb-4">
+  <h2 class="fw-bold mb-2">
+    <i class="bi bi-robot text-primary me-2"></i>AI Resume Shortlisting
+  </h2>
+  <p class="text-muted">Auto-ranked applicants based on job description match for: <strong>{{ job.title }}</strong></p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card bg-primary text-white">
+      <div class="card-body text-center">
+        <h5 class="card-title">Total Applicants</h5>
+        <h3 class="card-text">{{ total_applicants }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-success text-white">
+      <div class="card-body text-center">
+        <h5 class="card-title">Shortlisted</h5>
+        <h3 class="card-text">{{ shortlisted_count }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-warning text-white">
+      <div class="card-body text-center">
+        <h5 class="card-title">Rejected</h5>
+        <h3 class="card-text">{{ rejected_count }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-info text-white">
+      <div class="card-body text-center">
+        <h5 class="card-title">Success Rate</h5>
+        <h3 class="card-text">{{ "%.1f"|format((shortlisted_count / total_applicants * 100) if total_applicants > 0 else 0) }}%</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Shortlisted Applicants -->
+{% if shortlisted_applicants %}
+<div class="card mb-4 border-success">
+  <div class="card-header bg-success text-white">
+    <h5 class="mb-0">
+      <i class="bi bi-check-circle me-2"></i>Shortlisted Candidates ({{ shortlisted_count }})
+    </h5>
+    <small>Ranked by AI score - highest matches first</small>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Rank</th>
+            <th>Candidate</th>
+            <th>AI Score</th>
+            <th>Skill Match</th>
+            <th>ATS Score</th>
+            <th>Experience</th>
+            <th>Shortlist Reason</th>
+            <th>Applied Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for applicant in shortlisted_applicants %}
+          <tr>
+            <td>
+              <span class="badge bg-success fs-6">#{{ loop.index }}</span>
+            </td>
+            <td>
+              <strong>{{ applicant.user.username }}</strong>
+              {% if applicant.has_resume %}
+                <br><small class="text-success"><i class="bi bi-file-earmark-check me-1"></i>Resume Available</small>
+              {% else %}
+                <br><small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>No Resume</small>
+              {% endif %}
+            </td>
+            <td>
+              <div class="d-flex align-items-center">
+                <div class="progress me-2" style="width: 60px; height: 8px;">
+                  <div class="progress-bar bg-success" style="width: {{ applicant.overall_score }}%"></div>
+                </div>
+                <span class="fw-bold">{{ "%.0f"|format(applicant.overall_score) }}</span>
+              </div>
+            </td>
+            <td>
+              {% if applicant.match_percentage >= 80 %}
+                <span class="badge bg-success">{{ "%.0f"|format(applicant.match_percentage) }}%</span>
+              {% elif applicant.match_percentage >= 60 %}
+                <span class="badge bg-warning text-dark">{{ "%.0f"|format(applicant.match_percentage) }}%</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ "%.0f"|format(applicant.match_percentage) }}%</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if applicant.ats_score >= 80 %}
+                <span class="badge bg-success">{{ applicant.ats_score }}%</span>
+              {% elif applicant.ats_score >= 60 %}
+                <span class="badge bg-warning text-dark">{{ applicant.ats_score }}%</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ applicant.ats_score }}%</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if applicant.experience_level == 'Senior' %}
+                <span class="badge bg-primary">{{ applicant.experience_level }}</span>
+              {% elif applicant.experience_level == 'Mid Level' %}
+                <span class="badge bg-info">{{ applicant.experience_level }}</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ applicant.experience_level }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <small class="text-muted">{{ applicant.shortlist_reason }}</small>
+            </td>
+            <td>
+              <small class="text-muted">
+                {{ applicant.application.applied_at.strftime('%Y-%m-%d %H:%M') }}
+              </small>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Rejected Applicants -->
+{% if rejected_applicants %}
+<div class="card mb-4 border-warning">
+  <div class="card-header bg-warning text-dark">
+    <h5 class="mb-0">
+      <i class="bi bi-x-circle me-2"></i>Rejected Candidates ({{ rejected_count }})
+    </h5>
+    <small>Lower AI scores - manual review recommended</small>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Rank</th>
+            <th>Candidate</th>
+            <th>AI Score</th>
+            <th>Skill Match</th>
+            <th>ATS Score</th>
+            <th>Experience</th>
+            <th>Rejection Reason</th>
+            <th>Applied Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for applicant in rejected_applicants %}
+          <tr>
+            <td>
+              <span class="badge bg-secondary fs-6">#{{ loop.index + shortlisted_count }}</span>
+            </td>
+            <td>
+              <strong>{{ applicant.user.username }}</strong>
+              {% if applicant.has_resume %}
+                <br><small class="text-success"><i class="bi bi-file-earmark-check me-1"></i>Resume Available</small>
+              {% else %}
+                <br><small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>No Resume</small>
+              {% endif %}
+            </td>
+            <td>
+              <div class="d-flex align-items-center">
+                <div class="progress me-2" style="width: 60px; height: 8px;">
+                  <div class="progress-bar bg-warning" style="width: {{ applicant.overall_score }}%"></div>
+                </div>
+                <span class="fw-bold">{{ "%.0f"|format(applicant.overall_score) }}</span>
+              </div>
+            </td>
+            <td>
+              {% if applicant.match_percentage >= 60 %}
+                <span class="badge bg-warning text-dark">{{ "%.0f"|format(applicant.match_percentage) }}%</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ "%.0f"|format(applicant.match_percentage) }}%</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if applicant.ats_score >= 60 %}
+                <span class="badge bg-warning text-dark">{{ applicant.ats_score }}%</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ applicant.ats_score }}%</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if applicant.experience_level == 'Senior' %}
+                <span class="badge bg-primary">{{ applicant.experience_level }}</span>
+              {% elif applicant.experience_level == 'Mid Level' %}
+                <span class="badge bg-info">{{ applicant.experience_level }}</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ applicant.experience_level }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <small class="text-muted">{{ applicant.shortlist_reason }}</small>
+            </td>
+            <td>
+              <small class="text-muted">
+                {{ applicant.application.applied_at.strftime('%Y-%m-%d %H:%M') }}
+              </small>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- AI Analysis Summary -->
+<div class="row mt-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="bi bi-graph-up me-2"></i>Shortlist Analysis</h6>
+      </div>
+      <div class="card-body">
+        <ul class="list-unstyled">
+          <li><strong>Average Skill Match:</strong> {{ "%.1f"|format(avg_match_percentage) }}%</li>
+          <li><strong>Average ATS Score:</strong> {{ "%.1f"|format(avg_ats_score) }}%</li>
+          <li><strong>Shortlist Rate:</strong> {{ "%.1f"|format((shortlisted_count / total_applicants * 100) if total_applicants > 0 else 0) }}%</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="bi bi-lightbulb me-2"></i>AI Recommendations</h6>
+      </div>
+      <div class="card-body">
+        <ul class="list-unstyled">
+          <li>✅ <strong>Top candidates</strong> are ranked by overall AI score</li>
+          <li>✅ <strong>Skill match</strong> is weighted 60% in scoring</li>
+          <li>✅ <strong>ATS compatibility</strong> is weighted 30% in scoring</li>
+          <li>✅ <strong>Experience level</strong> is automatically determined</li>
+          <li>⚠️ <strong>Manual review</strong> recommended for borderline cases</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row mt-4">
+  <div class="col-12 text-center">
+    <a href="{{ url_for('applicants') }}" class="btn btn-outline-primary me-2">
+      <i class="bi bi-arrow-left me-1"></i>Back to All Applicants
+    </a>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-speedometer2 me-1"></i>Dashboard
+    </a>
+  </div>
+</div>
+
+<style>
+.card {
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.badge {
+  font-size: 0.8em;
+  padding: 0.5em 0.8em;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.progress {
+  border-radius: 10px;
+}
+
+.progress-bar {
+  border-radius: 10px;
+}
+</style>
+{% endblock %} 

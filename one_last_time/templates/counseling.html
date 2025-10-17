@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card p-4 shadow-sm text-center">
+      <i class="bi bi-compass display-3 text-info mb-2"></i>
+      <h2 class="fw-bold">AI Career Counseling</h2>
+      {% if strengths %}
+      <div class="alert alert-success text-start mt-4">
+        <strong>Strengths & Potential:</strong>
+        <ul class="mb-0">
+          {% for s in strengths %}
+            <li>{{ s }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {% if attitude %}
+      <div class="alert alert-info text-start">
+        <strong>Inferred Attitude & Work Style:</strong>
+        <ul class="mb-0">
+          {% for a in attitude %}
+            <li>{{ a }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {% if career_advice %}
+      <div class="alert alert-primary text-start">
+        <strong>Recommended Career Paths:</strong>
+        <ul class="mb-0">
+          {% for c in career_advice %}
+            <li>
+              <strong>{{ c.role }}</strong><br>
+              <span class="text-muted">Why: {{ c.why }}</span><br>
+              <span class="text-muted">To Succeed: {{ c.learn }}</span><br>
+              <span class="text-muted">Best Fit: {{ c.industry }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {% if resume_feedback %}
+      <div class="alert alert-warning text-start">
+        <strong>Resume Feedback:</strong>
+        <ul class="mb-0">
+          {% for f in resume_feedback %}
+            <li>{{ f }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {% if improvements %}
+      <div class="alert alert-secondary text-start">
+        <strong>Improvements:</strong>
+        <ul class="mb-0">
+          {% for i in improvements %}
+            <li>{{ i }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      
+      <!-- Career Gap Analysis -->
+      {% if gap_analysis and gap_analysis.has_gaps %}
+      <div class="alert alert-warning text-start">
+        <strong>🎯 Career Gap Analysis:</strong>
+        <p class="mb-2"><strong>Don't worry about career gaps!</strong> Here's how to address them positively:</p>
+        <ul class="mb-2">
+          {% for gap in gap_analysis.gaps %}
+            <li><strong>Gap Detected:</strong> {{ gap }}</li>
+          {% endfor %}
+        </ul>
+        {% if gap_advice %}
+        <strong>Specific Advice:</strong>
+        <ul class="mb-0">
+          {% for advice in gap_advice.suggestions %}
+            <li>{{ advice }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+      {% elif gap_analysis and not gap_analysis.has_gaps %}
+      <div class="alert alert-success text-start">
+        <strong>✅ Career Gap Analysis:</strong>
+        <p class="mb-0">Great! No significant career gaps detected in your resume. Continue building on your current experience.</p>
+      </div>
+      {% endif %}
+      
+      <!-- Career Plan -->
+      {% if career_plan %}
+      <div class="alert alert-info text-start">
+        <strong>📋 Your Personalized Career Plan:</strong>
+        <div class="row mt-3">
+          <div class="col-md-6">
+            <h6>Current Assessment:</h6>
+            <ul>
+              <li><strong>Skill Level:</strong> {{ career_plan.current_assessment.skill_level }}</li>
+              <li><strong>Strengths:</strong> {{ career_plan.current_assessment.strengths|join(', ') }}</li>
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <h6>Action Items:</h6>
+            <ul>
+              {% for item in career_plan.action_items %}
+                <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      
+      {% if not strengths and not attitude and not career_advice and not resume_feedback and not improvements and not gap_analysis %}
+        <p class="text-muted">Upload your resume to get personalized career advice!</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

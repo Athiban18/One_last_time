@@ -1,0 +1,443 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="text-center mb-5">
+  <h1 class="fw-bold mb-3">Welcome back, {{ current_user.username }}! 👋</h1>
+  <p class="text-muted fs-5">Your personalized AI-powered job portal dashboard</p>
+</div>
+
+{% if current_user.user_type == 'student' %}
+<div class="mb-4">
+  <div class="card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2 class="fw-bold mb-0"><i class="bi bi-bar-chart-fill me-2"></i>Resume Analytics Dashboard</h2>
+      <span class="text-muted">Last updated: {{ last_updated }}</span>
+    </div>
+  </div>
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="card text-center p-4 h-100">
+        <h5 class="fw-bold">Total Resumes</h5>
+        <h2 class="display-5 fw-bold">{{ total_resumes }}</h2>
+        <span class="text-success">{{ total_resumes_delta }}</span>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center p-4 h-100">
+        <h5 class="fw-bold">Avg ATS Score</h5>
+        <h2 class="display-5 fw-bold">{{ avg_ats }}%</h2>
+        <span class="text-success">{{ avg_ats_delta }}</span>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center p-4 h-100">
+        <h5 class="fw-bold">High Performing</h5>
+        <h2 class="display-5 fw-bold">{{ high_performing_count }}</h2>
+        <span class="text-success">{{ high_perf_delta }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="row g-4 mb-4">
+    <div class="col-lg-4">
+      <div class="card p-4 h-100">
+        <h5 class="fw-bold mb-3">ATS Score Performance</h5>
+        <canvas id="atsGauge"></canvas>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card p-4 h-100">
+        <h5 class="fw-bold mb-3">Skill Distribution</h5>
+        <canvas id="skillBar"></canvas>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card p-4 h-100">
+        <h5 class="fw-bold mb-3">Weekly Submission Pattern</h5>
+        <canvas id="weeklyLine"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="card p-4 mb-4">
+    <h4 class="fw-bold mb-3">🎯 Key Insights</h4>
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="card p-3 mb-3">
+          <h6 class="fw-bold mb-2">Success Rate by Job Category</h6>
+          <canvas id="catBar"></canvas>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="row g-3">
+          <div class="col-12">
+            <div class="card p-3">
+              <h6 class="fw-bold mb-1">🏆 Top Performing Category</h6>
+              <div>{{ top_cat }} <span class="text-success">({{ top_cat_score }})</span> <span class="text-success">{{ top_cat_delta }}</span></div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="card p-3">
+              <h6 class="fw-bold mb-1">Weekly Trend</h6>
+              <div>{{ weekly_trend }}</div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="card p-3">
+              <h6 class="fw-bold mb-1">Top Skills</h6>
+              <ul class="mb-0">
+                {% for skill, count in top_skills_list %}
+                  <li>{{ skill }} <span class="text-muted">({{ count }})</span></li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// ATS Gauge
+const atsGauge = document.getElementById('atsGauge');
+if (atsGauge) {
+  new Chart(atsGauge, {
+    type: 'doughnut',
+    data: {
+      labels: ['ATS Score', 'Remaining'],
+      datasets: [{
+        data: [{{ avg_ats }}, {{ 100-avg_ats }}],
+        backgroundColor: ['#667eea', '#e2e8f0'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      cutout: '70%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false },
+        title: { display: true, text: '{{ avg_ats }}%', position: 'center', color: '#667eea', font: { size: 24 } }
+      }
+    }
+  });
+}
+// Skill Bar
+const skillBar = document.getElementById('skillBar');
+if (skillBar) {
+  new Chart(skillBar, {
+    type: 'bar',
+    data: {
+      labels: ['Other', 'Programming', 'Database', 'Cloud', 'Management'],
+      datasets: [{
+        label: 'Skills',
+        data: {{ skill_dist|tojson }},
+        backgroundColor: ['#a0aec0', '#667eea', '#38a169', '#4299e1', '#ecc94b']
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+// Weekly Line
+const weeklyLine = document.getElementById('weeklyLine');
+if (weeklyLine) {
+  new Chart(weeklyLine, {
+    type: 'line',
+    data: {
+      labels: {{ days|tojson }},
+      datasets: [{
+        label: 'Submissions',
+        data: {{ weekly_pattern|tojson }},
+        fill: false,
+        borderColor: '#667eea',
+        tension: 0.4
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+// Category Bar
+const catBar = document.getElementById('catBar');
+if (catBar) {
+  new Chart(catBar, {
+    type: 'bar',
+    data: {
+      labels: ['Programming', 'Database', 'Cloud', 'Management', 'Other'],
+      datasets: [{
+        label: 'Success %',
+        data: [
+          {{ cat_success['Programming'] }},
+          {{ cat_success['Database'] }},
+          {{ cat_success['Cloud'] }},
+          {{ cat_success['Management'] }},
+          {{ cat_success['Other'] }}
+        ],
+        backgroundColor: ['#667eea', '#38a169', '#4299e1', '#ecc94b', '#a0aec0']
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, max: 100 } }
+    }
+  });
+}
+</script>
+
+{% elif current_user.user_type == 'employer' %}
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card text-center p-4 h-100">
+      <div class="mb-3">
+        <i class="bi bi-plus-circle-fill display-4 text-primary"></i>
+      </div>
+      <h4 class="fw-bold mb-3">Post a Job</h4>
+      <p class="text-muted mb-4">Create new job listings and reach qualified candidates</p>
+      <a href="/post_job" class="btn btn-primary w-100">Post Job</a>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card text-center p-4 h-100">
+      <div class="mb-3">
+        <i class="bi bi-people-fill display-4 text-success"></i>
+      </div>
+      <h4 class="fw-bold mb-3">View Applicants</h4>
+      <p class="text-muted mb-4">Review and manage applications with AI-powered insights</p>
+      <a href="/applicants" class="btn btn-success w-100">View Applicants</a>
+    </div>
+  </div>
+</div>
+
+<div class="row mt-5">
+  <div class="col-12">
+    <div class="card p-4">
+      <h4 class="fw-bold mb-3"><i class="bi bi-bar-chart me-2"></i>Employer Analytics</h4>
+      <div class="row text-center">
+        <div class="col-md-3">
+          <div class="p-3" style="cursor: pointer; transition: all 0.3s ease;" 
+               onclick="showEmployerJobs()" 
+               onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)'" 
+               onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
+            <i class="bi bi-briefcase text-primary display-5"></i>
+            <h5 class="mt-2">Jobs Posted</h5>
+            <p class="text-muted">{{ employer_stats.total_jobs_posted }} total</p>
+            <small class="text-success">+{{ current_user.jobs|length }} active</small>
+            <div class="mt-2">
+              <small class="text-primary"><i class="bi bi-hand-index me-1"></i>Click to view</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="p-3">
+            <i class="bi bi-people text-success display-5"></i>
+            <h5 class="mt-2">Total Applicants</h5>
+            <p class="text-muted">{{ total_applications }} received</p>
+            <small class="text-success">+{{ recent_applications }} this month</small>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="p-3">
+            <i class="bi bi-eye text-info display-5"></i>
+            <h5 class="mt-2">Job Views</h5>
+            <p class="text-muted">{{ employer_stats.total_job_views }} total</p>
+            <small class="text-info">+{{ recent_job_views }} this week</small>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="p-3">
+            <i class="bi bi-graph-up text-warning display-5"></i>
+            <h5 class="mt-2">Engagement Rate</h5>
+            <p class="text-muted">{{ "%.1f"|format((total_applications / employer_stats.total_job_views * 100) if employer_stats.total_job_views > 0 else 0) }}%</p>
+            <small class="text-warning">View to Apply</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if employer_stats.last_job_posted %}
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card p-4">
+      <h5 class="fw-bold mb-3"><i class="bi bi-clock-history me-2"></i>Recent Activity</h5>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-calendar-check text-success me-3"></i>
+            <div>
+              <h6 class="mb-1">Last Job Posted</h6>
+              <p class="text-muted mb-0">{{ employer_stats.last_job_posted.strftime('%B %d, %Y at %I:%M %p') }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-graph-up text-primary me-3"></i>
+            <div>
+              <h6 class="mb-1">Last Updated</h6>
+              <p class="text-muted mb-0">{{ employer_stats.last_updated.strftime('%B %d, %Y at %I:%M %p') }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+
+<!-- Employer Jobs Modal -->
+<div class="modal fade" id="employerJobsModal" tabindex="-1" aria-labelledby="employerJobsTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="employerJobsTitle">
+                    <i class="bi bi-briefcase me-2"></i>Jobs Posted by {{ current_user.username }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="employerJobsList">Loading...</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="/post_job" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Post New Job
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showEmployerJobs() {
+    console.log('Fetching employer jobs...');
+    
+    // Fetch jobs from the API
+    fetch('/employer/jobs')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch jobs');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Jobs data received:', data);
+            const jobs = data.jobs;
+    
+    if (jobs.length === 0) {
+        document.getElementById('employerJobsList').innerHTML = `
+            <div class="text-center py-5">
+                <i class="bi bi-briefcase display-1 text-muted mb-3"></i>
+                <h4 class="text-muted mb-3">No Jobs Posted Yet</h4>
+                <p class="text-muted mb-4">Start posting jobs to attract qualified candidates!</p>
+                <a href="/post_job" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Post Your First Job
+                </a>
+            </div>
+        `;
+    } else {
+        let jobsHtml = `
+            <div class="row g-3">
+        `;
+        
+        jobs.forEach(job => {
+            const statusBadge = job.is_active ? 
+                '<span class="badge bg-success">Active</span>' : 
+                '<span class="badge bg-secondary">Inactive</span>';
+            
+            const salaryText = job.salary_min && job.salary_max ? 
+                `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}` : 
+                'Salary not specified';
+            
+            jobsHtml += `
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title fw-bold mb-0">${job.title}</h6>
+                                ${statusBadge}
+                            </div>
+                            <p class="text-muted small mb-2">${job.company_name}</p>
+                            <p class="text-muted small mb-2">${job.description}</p>
+                            
+                            <div class="row text-center mb-2">
+                                <div class="col-6">
+                                    <small class="text-muted">Views</small>
+                                    <div class="fw-bold text-primary">${job.views}</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Applications</small>
+                                    <div class="fw-bold text-success">${job.applications_count}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                <span class="badge bg-secondary">${job.job_type}</span>
+                                <span class="badge bg-info">${job.experience_level}</span>
+                                ${job.location !== 'Not specified' ? `<span class="badge bg-warning">${job.location}</span>` : ''}
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">${salaryText}</small>
+                                <small class="text-muted">Posted: ${job.posted_date}</small>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0 pt-0">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary flex-fill" onclick="viewJobDetails(${job.id})">
+                                    <i class="bi bi-eye me-1"></i>View
+                                </button>
+                                <button class="btn btn-sm btn-outline-success flex-fill" onclick="viewApplicants(${job.id})">
+                                    <i class="bi bi-people me-1"></i>Applicants
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        jobsHtml += `
+            </div>
+        `;
+        
+        document.getElementById('employerJobsList').innerHTML = jobsHtml;
+    }
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('employerJobsModal'));
+    modal.show();
+        })
+        .catch(error => {
+            console.error('Error fetching jobs:', error);
+            document.getElementById('employerJobsList').innerHTML = `
+                <div class="text-center py-5">
+                    <i class="bi bi-exclamation-triangle display-1 text-danger mb-3"></i>
+                    <h4 class="text-danger mb-3">Error Loading Jobs</h4>
+                    <p class="text-muted mb-4">Failed to load your posted jobs. Please try again.</p>
+                    <button class="btn btn-primary" onclick="showEmployerJobs()">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Retry
+                    </button>
+                </div>
+            `;
+            const modal = new bootstrap.Modal(document.getElementById('employerJobsModal'));
+            modal.show();
+        });
+}
+
+function viewJobDetails(jobId) {
+    // Open job details in a new tab or modal
+    window.open(`/job/${jobId}`, '_blank');
+}
+
+function viewApplicants(jobId) {
+    // Redirect to applicants page with job filter
+    window.location.href = `/applicants?job_id=${jobId}`;
+}
+</script>
+
+{% endblock %}

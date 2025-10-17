@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold text-dark mb-1">
+                        <i class="bi bi-bell me-2"></i>Notification Settings
+                    </h2>
+                    <p class="text-muted mb-0">Manage your job alerts and email preferences</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Email Settings -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-envelope me-2"></i>Email Notifications
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="notificationForm">
+                        <div class="row g-3">
+                            <!-- Email Address -->
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ current_user.email or '' }}" 
+                                       placeholder="your.email@example.com">
+                                <div class="form-text">We'll send job alerts to this email address</div>
+                            </div>
+                            
+                            <!-- Notification Toggle -->
+                            <div class="col-md-6">
+                                <label class="form-label">Email Notifications</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="email_notifications" 
+                                           name="email_notifications" 
+                                           {% if current_user.email_notifications %}checked{% endif %}>
+                                    <label class="form-check-label" for="email_notifications">
+                                        Receive job alerts via email
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Alert Frequency -->
+                            <div class="col-md-6">
+                                <label for="job_alert_frequency" class="form-label">Alert Frequency</label>
+                                <select class="form-select" id="job_alert_frequency" name="job_alert_frequency">
+                                    <option value="immediate" {% if current_user.job_alert_frequency == 'immediate' %}selected{% endif %}>Immediate</option>
+                                    <option value="daily" {% if current_user.job_alert_frequency == 'daily' %}selected{% endif %}>Daily Digest</option>
+                                    <option value="weekly" {% if current_user.job_alert_frequency == 'weekly' %}selected{% endif %}>Weekly Digest</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Minimum Match Percentage -->
+                            <div class="col-md-6">
+                                <label for="min_match_percentage" class="form-label">Minimum Match %</label>
+                                <input type="range" class="form-range" id="min_match_percentage" name="min_match_percentage" 
+                                       min="30" max="90" value="50" 
+                                       oninput="this.nextElementSibling.value = this.value + '%'">
+                                <output>50%</output>
+                                <div class="form-text">Only receive alerts for jobs matching at least this percentage</div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Job Preferences -->
+                        <h6 class="fw-bold mb-3">Job Preferences</h6>
+                        <div class="row g-3">
+                            <!-- Preferred Job Types -->
+                            <div class="col-md-6">
+                                <label class="form-label">Preferred Job Types</label>
+                                {% set current_types = current_user.preferred_job_types|from_json if current_user.preferred_job_types else [] %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="preferred_job_types" value="Full-time" id="fulltime" 
+                                           {% if 'Full-time' in current_types %}checked{% endif %}>
+                                    <label class="form-check-label" for="fulltime">Full-time</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="preferred_job_types" value="Part-time" id="parttime"
+                                           {% if 'Part-time' in current_types %}checked{% endif %}>
+                                    <label class="form-check-label" for="parttime">Part-time</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="preferred_job_types" value="Contract" id="contract"
+                                           {% if 'Contract' in current_types %}checked{% endif %}>
+                                    <label class="form-check-label" for="contract">Contract</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="preferred_job_types" value="Internship" id="internship"
+                                           {% if 'Internship' in current_types %}checked{% endif %}>
+                                    <label class="form-check-label" for="internship">Internship</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="preferred_job_types" value="Remote" id="remote"
+                                           {% if 'Remote' in current_types %}checked{% endif %}>
+                                    <label class="form-check-label" for="remote">Remote</label>
+                                </div>
+                            </div>
+                            
+                            <!-- Preferred Locations -->
+                            <div class="col-md-6">
+                                <label for="preferred_locations" class="form-label">Preferred Locations</label>
+                                <textarea class="form-control" id="preferred_locations" name="preferred_locations" rows="4" 
+                                          placeholder="Enter locations separated by commas&#10;e.g., New York, San Francisco, Remote">{{ current_user.preferred_locations or '' }}</textarea>
+                                <div class="form-text">Leave empty to receive alerts for all locations</div>
+                            </div>
+                            
+                            <!-- Salary Range -->
+                            <div class="col-md-6">
+                                <label for="salary_range_min" class="form-label">Minimum Salary (USD)</label>
+                                <input type="number" class="form-control" id="salary_range_min" name="salary_range_min" 
+                                       value="{{ current_user.salary_range_min or '' }}" 
+                                       placeholder="50000">
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="salary_range_max" class="form-label">Maximum Salary (USD)</label>
+                                <input type="number" class="form-control" id="salary_range_max" name="salary_range_max" 
+                                       value="{{ current_user.salary_range_max or '' }}" 
+                                       placeholder="100000">
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Save Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Alerts -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-clock-history me-2"></i>Recent Job Alerts
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_alerts %}
+                        <div class="list-group list-group-flush">
+                            {% for alert in recent_alerts %}
+                            <div class="list-group-item border-0 px-0 {% if not alert.is_read %}bg-light{% endif %}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">{{ alert.job.title }}</h6>
+                                        <p class="text-muted mb-1 small">{{ alert.job.company_name or 'Company' }}</p>
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-success me-2">{{ "%.1f"|format(alert.match_percentage) }}% Match</span>
+                                            <small class="text-muted">{{ alert.sent_at.strftime('%b %d') }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="bi bi-three-dots"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="/job/{{ alert.job.id }}">View Job</a></li>
+                                            <li><a class="dropdown-item" href="/mark_alert_read/{{ alert.id }}">Mark Read</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" href="/delete_alert/{{ alert.id }}">Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="/job_alerts" class="btn btn-outline-primary btn-sm">View All Alerts</a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-bell-slash display-4 text-muted mb-3"></i>
+                            <h6 class="text-muted">No job alerts yet</h6>
+                            <p class="text-muted small">You'll receive alerts when matching jobs are posted</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update range output
+    const rangeInput = document.getElementById('min_match_percentage');
+    const output = rangeInput.nextElementSibling;
+    rangeInput.addEventListener('input', function() {
+        output.value = this.value + '%';
+    });
+});
+</script>
+{% endblock %} 

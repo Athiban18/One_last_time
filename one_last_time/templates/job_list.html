@@ -1,0 +1,417 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="mb-4">
+  <h2 class="fw-bold mb-2"><i class="bi bi-briefcase-fill me-2"></i>Smart Job Matching</h2>
+  <p class="text-muted">Jobs are filtered based on your resume skills for better matches</p>
+</div>
+
+{% if not has_resume %}
+<div class="alert alert-warning mb-4">
+  <h5><i class="bi bi-exclamation-triangle me-2"></i>Upload Your Resume First!</h5>
+  <p class="mb-2">To see personalized job matches, please upload your resume.</p>
+  <a href="{{ url_for('upload_resume') }}" class="btn btn-primary btn-sm">
+    <i class="bi bi-upload me-1"></i>Upload Resume
+  </a>
+</div>
+{% endif %}
+
+<!-- Perfect Matches (70%+ skill match) -->
+{% if matched_jobs %}
+<div class="mb-4">
+  <h4 class="fw-bold text-success mb-3">
+    <i class="bi bi-check-circle me-2"></i>Perfect Matches ({{ matched_jobs|length }} jobs)
+  </h4>
+  <p class="text-muted">These jobs match 70% or more of your skills</p>
+  <div class="row g-4">
+    {% for job_data in matched_jobs %}
+    <div class="col-lg-6 col-xl-4">
+      <div class="card h-100 shadow-sm job-card border-success" data-job-id="{{ job_data.job.id }}" style="cursor: pointer;">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="card-title fw-bold mb-0">{{ job_data.job.title }}</h5>
+            <span class="badge bg-success">{{ "%.0f"|format(job_data.match_percentage) }}% Match</span>
+          </div>
+          <p class="card-text text-muted mb-3">{{ job_data.job.description[:120] }}{% if job_data.job.description|length > 120 %}...{% endif %}</p>
+          
+          <!-- Skills Match -->
+          <div class="mb-3">
+            <small class="text-success fw-bold">Your Skills:</small>
+            <div class="d-flex flex-wrap gap-1 mt-1">
+              {% for skill in job_data.matching_skills[:3] %}
+                <span class="badge bg-success">{{ skill }}</span>
+              {% endfor %}
+              {% if job_data.matching_skills|length > 3 %}
+                <span class="badge bg-secondary">+{{ job_data.matching_skills|length - 3 }} more</span>
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-building text-muted me-2"></i>
+              <small class="text-muted">Company</small>
+            </div>
+            <button class="btn btn-success btn-sm apply-btn" data-job-id="{{ job_data.job.id }}" onclick="event.stopPropagation(); applyToJob({{ job_data.job.id }})">
+              <i class="bi bi-send me-1"></i>Apply Now
+            </button>
+          </div>
+        </div>
+        <div class="card-footer bg-transparent border-0 pt-0">
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+              <i class="bi bi-eye me-1"></i>{{ job_data.job.views or 0 }} views
+            </small>
+            <small class="text-success">
+              <i class="bi bi-star me-1"></i>High Match
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Partial Matches (30-69% skill match) -->
+{% if partial_matches %}
+<div class="mb-4">
+  <h4 class="fw-bold text-warning mb-3">
+    <i class="bi bi-star me-2"></i>Good Matches ({{ partial_matches|length }} jobs)
+  </h4>
+  <p class="text-muted">These jobs match 30-69% of your skills</p>
+  <div class="row g-4">
+    {% for job_data in partial_matches %}
+    <div class="col-lg-6 col-xl-4">
+      <div class="card h-100 shadow-sm job-card border-warning" data-job-id="{{ job_data.job.id }}" style="cursor: pointer;">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="card-title fw-bold mb-0">{{ job_data.job.title }}</h5>
+            <span class="badge bg-warning text-dark">{{ "%.0f"|format(job_data.match_percentage) }}% Match</span>
+          </div>
+          <p class="card-text text-muted mb-3">{{ job_data.job.description[:120] }}{% if job_data.job.description|length > 120 %}...{% endif %}</p>
+          
+          <!-- Skills Analysis -->
+          <div class="mb-3">
+            <small class="text-warning fw-bold">Skills Match:</small>
+            <div class="d-flex flex-wrap gap-1 mt-1">
+              {% for skill in job_data.matching_skills[:2] %}
+                <span class="badge bg-success">{{ skill }}</span>
+              {% endfor %}
+              {% if job_data.missing_skills[:2] %}
+                {% for skill in job_data.missing_skills[:2] %}
+                  <span class="badge bg-warning text-dark">{{ skill }}</span>
+                {% endfor %}
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-building text-muted me-2"></i>
+              <small class="text-muted">Company</small>
+            </div>
+            <button class="btn btn-warning btn-sm apply-btn" data-job-id="{{ job_data.job.id }}" onclick="event.stopPropagation(); applyToJob({{ job_data.job.id }})">
+              <i class="bi bi-send me-1"></i>Apply
+            </button>
+          </div>
+        </div>
+        <div class="card-footer bg-transparent border-0 pt-0">
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+              <i class="bi bi-eye me-1"></i>{{ job_data.job.views or 0 }} views
+            </small>
+            <small class="text-warning">
+              <i class="bi bi-lightbulb me-1"></i>Learn More
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- No Matches (Less than 30% skill match) -->
+{% if no_matches %}
+<div class="mb-4">
+  <h4 class="fw-bold text-muted mb-3">
+    <i class="bi bi-info-circle me-2"></i>Other Jobs ({{ no_matches|length }} jobs)
+  </h4>
+  <p class="text-muted">These jobs have lower skill match but might be worth exploring</p>
+  <div class="row g-4">
+    {% for job_data in no_matches %}
+    <div class="col-lg-6 col-xl-4">
+      <div class="card h-100 shadow-sm job-card border-muted" data-job-id="{{ job_data.job.id }}" style="cursor: pointer;">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="card-title fw-bold mb-0">{{ job_data.job.title }}</h5>
+            <span class="badge bg-secondary">{{ "%.0f"|format(job_data.match_percentage) }}% Match</span>
+          </div>
+          <p class="card-text text-muted mb-3">{{ job_data.job.description[:120] }}{% if job_data.job.description|length > 120 %}...{% endif %}</p>
+          
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-building text-muted me-2"></i>
+              <small class="text-muted">Company</small>
+            </div>
+            <button class="btn btn-outline-secondary btn-sm apply-btn" data-job-id="{{ job_data.job.id }}" onclick="event.stopPropagation(); applyToJob({{ job_data.job.id }})">
+              <i class="bi bi-send me-1"></i>Apply
+            </button>
+          </div>
+        </div>
+        <div class="card-footer bg-transparent border-0 pt-0">
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+              <i class="bi bi-eye me-1"></i>{{ job_data.job.views or 0 }} views
+            </small>
+            <small class="text-muted">
+              <i class="bi bi-arrow-up me-1"></i>Upskill
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Job Detail Modal -->
+<div class="modal fade" id="jobDetailModal" tabindex="-1" aria-labelledby="jobTitle" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="jobTitle">Job Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="jobDetails">Loading...</div>
+        <div id="skillAnalysis" class="mt-4"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success" id="applyBtn">Apply for this Job</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, setting up job cards...');
+    
+    // Make job cards clickable
+    const jobCards = document.querySelectorAll('.job-card');
+    console.log('Found', jobCards.length, 'job cards');
+    
+    jobCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            console.log('Job card clicked!');
+            const jobId = this.getAttribute('data-job-id');
+            console.log('Job ID:', jobId);
+            showJobDetails(jobId);
+        });
+    });
+    
+    // Check application status for all jobs
+    checkAllApplicationStatus();
+});
+
+function checkAllApplicationStatus() {
+    const applyButtons = document.querySelectorAll('.apply-btn');
+    applyButtons.forEach(button => {
+        const jobId = button.getAttribute('data-job-id');
+        checkApplicationStatus(jobId, button);
+    });
+}
+
+function checkApplicationStatus(jobId, button) {
+    fetch(`/check_application/${jobId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.has_applied) {
+                updateButtonToApplied(button);
+            }
+        })
+        .catch(error => {
+            console.error('Error checking application status:', error);
+        });
+}
+
+function updateButtonToApplied(button) {
+    button.innerHTML = '<i class="bi bi-check-circle me-1"></i>Applied';
+    button.className = 'btn btn-success btn-sm apply-btn';
+    button.disabled = true;
+    button.onclick = null; // Remove click handler
+}
+
+function showJobDetails(jobId) {
+    console.log('Fetching job details for ID:', jobId);
+    
+    fetch(`/job/${jobId}`)
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Job data received:', data);
+            
+            document.getElementById('jobTitle').textContent = data.job.title;
+            document.getElementById('jobDetails').innerHTML = `
+                <h6 class="fw-bold">Job Description:</h6>
+                <p>${data.job.description}</p>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Required Skills:</h6>
+                        <div class="d-flex flex-wrap gap-1">
+                            ${data.required_skills.map(skill => `<span class="badge bg-primary">${skill}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Your Skills Match:</h6>
+                        <div class="d-flex flex-wrap gap-1">
+                            ${data.matching_skills.map(skill => `<span class="badge bg-success">${skill}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Skill gap analysis
+            if (data.missing_skills.length > 0) {
+                document.getElementById('skillAnalysis').innerHTML = `
+                    <div class="alert alert-warning">
+                        <h6 class="fw-bold"><i class="bi bi-exclamation-triangle me-2"></i>Skills You Need to Learn:</h6>
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            ${data.missing_skills.map(skill => `<span class="badge bg-warning text-dark">${skill}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('skillAnalysis').innerHTML = `
+                    <div class="alert alert-success">
+                        <h6 class="fw-bold"><i class="bi bi-check-circle me-2"></i>Great Match!</h6>
+                        <p class="mb-0">You have all the required skills for this position.</p>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('applyBtn').onclick = () => applyToJob(jobId);
+            
+            // Check if user has already applied to this job
+            fetch(`/check_application/${jobId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const modalApplyBtn = document.getElementById('applyBtn');
+                    if (data.has_applied) {
+                        modalApplyBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Already Applied';
+                        modalApplyBtn.className = 'btn btn-success';
+                        modalApplyBtn.disabled = true;
+                        modalApplyBtn.onclick = null;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking application status:', error);
+                });
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('jobDetailModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error loading job details:', error);
+            alert('Error loading job details: ' + error.message);
+        });
+}
+
+function applyToJob(jobId) {
+    console.log('Applying to job:', jobId);
+    
+    // Find the button for this job
+    const button = document.querySelector(`.apply-btn[data-job-id="${jobId}"]`);
+    
+    fetch(`/apply/${jobId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Apply response:', data);
+        if (data.success) {
+            // Update button to show applied status
+            if (button) {
+                updateButtonToApplied(button);
+            }
+            
+            // Show success message
+            const successAlert = document.createElement('div');
+            successAlert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+            successAlert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            successAlert.innerHTML = `
+                <i class="bi bi-check-circle me-2"></i>${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(successAlert);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                if (successAlert.parentNode) {
+                    successAlert.remove();
+                }
+            }, 3000);
+            
+            // Close modal if open
+            const modalElement = document.getElementById('jobDetailModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            }
+        } else {
+            if (data.has_applied) {
+                // User has already applied, update button
+                if (button) {
+                    updateButtonToApplied(button);
+                }
+                
+                // Show info message instead of error
+                const infoAlert = document.createElement('div');
+                infoAlert.className = 'alert alert-info alert-dismissible fade show position-fixed';
+                infoAlert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                infoAlert.innerHTML = `
+                    <i class="bi bi-info-circle me-2"></i>You have already applied to this job
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(infoAlert);
+                
+                // Auto-remove after 3 seconds
+                setTimeout(() => {
+                    if (infoAlert.parentNode) {
+                        infoAlert.remove();
+                    }
+                }, 3000);
+            } else {
+                // Other error
+                alert(data.message || 'Error applying to job');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error applying to job:', error);
+        alert('Error applying to job: ' + error.message);
+    });
+}
+</script>
+{% if not matched_jobs and not partial_matches and not no_matches %}
+<div class="text-center py-5">
+  <i class="bi bi-search display-1 text-muted mb-3"></i>
+  <h4 class="fw-bold mb-2">No Jobs Available</h4>
+  <p class="text-muted">Check back later for new opportunities or ask employers to post jobs!</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,477 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold text-dark mb-1">
+                        <i class="bi bi-search me-2"></i>Advanced Job Search
+                    </h2>
+                    <p class="text-muted mb-0">Find your perfect job with smart filters</p>
+                </div>
+                <div class="text-end">
+                    <small class="text-muted">{{ jobs|length }} jobs found</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-funnel me-2"></i>Search Filters
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" id="searchForm">
+                        <div class="row g-3">
+                            <!-- Keyword Search -->
+                            <div class="col-md-6">
+                                <label for="keyword" class="form-label">Keywords</label>
+                                <input type="text" class="form-control" id="keyword" name="keyword" 
+                                       value="{{ request.args.get('keyword', '') }}" 
+                                       placeholder="Job title, skills, company...">
+                            </div>
+                            
+                            <!-- Location -->
+                            <div class="col-md-6">
+                                <label for="location" class="form-label">Location</label>
+                                <input type="text" class="form-control" id="location" name="location" 
+                                       value="{{ request.args.get('location', '') }}" 
+                                       placeholder="City, state, or remote">
+                            </div>
+                            
+                            <!-- Job Type -->
+                            <div class="col-md-3">
+                                <label for="job_type" class="form-label">Job Type</label>
+                                <select class="form-select" id="job_type" name="job_type">
+                                    <option value="">All Types</option>
+                                    <option value="Full-time" {% if request.args.get('job_type') == 'Full-time' %}selected{% endif %}>Full-time</option>
+                                    <option value="Part-time" {% if request.args.get('job_type') == 'Part-time' %}selected{% endif %}>Part-time</option>
+                                    <option value="Contract" {% if request.args.get('job_type') == 'Contract' %}selected{% endif %}>Contract</option>
+                                    <option value="Internship" {% if request.args.get('job_type') == 'Internship' %}selected{% endif %}>Internship</option>
+                                    <option value="Freelance" {% if request.args.get('job_type') == 'Freelance' %}selected{% endif %}>Freelance</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Remote Work -->
+                            <div class="col-md-3">
+                                <label for="remote_work" class="form-label">Work Arrangement</label>
+                                <select class="form-select" id="remote_work" name="remote_work">
+                                    <option value="">All Arrangements</option>
+                                    <option value="Remote" {% if request.args.get('remote_work') == 'Remote' %}selected{% endif %}>Remote</option>
+                                    <option value="Hybrid" {% if request.args.get('remote_work') == 'Hybrid' %}selected{% endif %}>Hybrid</option>
+                                    <option value="On-site" {% if request.args.get('remote_work') == 'On-site' %}selected{% endif %}>On-site</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Experience Level -->
+                            <div class="col-md-3">
+                                <label for="experience_level" class="form-label">Experience Level</label>
+                                <select class="form-select" id="experience_level" name="experience_level">
+                                    <option value="">All Levels</option>
+                                    <option value="Entry" {% if request.args.get('experience_level') == 'Entry' %}selected{% endif %}>Entry Level</option>
+                                    <option value="Mid" {% if request.args.get('experience_level') == 'Mid' %}selected{% endif %}>Mid Level</option>
+                                    <option value="Senior" {% if request.args.get('experience_level') == 'Senior' %}selected{% endif %}>Senior Level</option>
+                                    <option value="Executive" {% if request.args.get('experience_level') == 'Executive' %}selected{% endif %}>Executive Level</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Industry -->
+                            <div class="col-md-3">
+                                <label for="industry" class="form-label">Industry</label>
+                                <select class="form-select" id="industry" name="industry">
+                                    <option value="">All Industries</option>
+                                    <option value="Technology" {% if request.args.get('industry') == 'Technology' %}selected{% endif %}>Technology</option>
+                                    <option value="Healthcare" {% if request.args.get('industry') == 'Healthcare' %}selected{% endif %}>Healthcare</option>
+                                    <option value="Finance" {% if request.args.get('industry') == 'Finance' %}selected{% endif %}>Finance</option>
+                                    <option value="Education" {% if request.args.get('industry') == 'Education' %}selected{% endif %}>Education</option>
+                                    <option value="Marketing" {% if request.args.get('industry') == 'Marketing' %}selected{% endif %}>Marketing</option>
+                                    <option value="Sales" {% if request.args.get('industry') == 'Sales' %}selected{% endif %}>Sales</option>
+                                    <option value="Engineering" {% if request.args.get('industry') == 'Engineering' %}selected{% endif %}>Engineering</option>
+                                    <option value="Design" {% if request.args.get('industry') == 'Design' %}selected{% endif %}>Design</option>
+                                    <option value="Consulting" {% if request.args.get('industry') == 'Consulting' %}selected{% endif %}>Consulting</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Salary Range -->
+                            <div class="col-md-6">
+                                <label for="salary_min" class="form-label">Minimum Salary (USD)</label>
+                                <input type="number" class="form-control" id="salary_min" name="salary_min" 
+                                       value="{{ request.args.get('salary_min', '') }}" 
+                                       placeholder="50000">
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="salary_max" class="form-label">Maximum Salary (USD)</label>
+                                <input type="number" class="form-control" id="salary_max" name="salary_max" 
+                                       value="{{ request.args.get('salary_max', '') }}" 
+                                       placeholder="100000">
+                            </div>
+                            
+                            <!-- Sort Options -->
+                            <div class="col-md-6">
+                                <label for="sort_by" class="form-label">Sort By</label>
+                                <select class="form-select" id="sort_by" name="sort_by">
+                                    <option value="relevance" {% if request.args.get('sort_by') == 'relevance' %}selected{% endif %}>Relevance</option>
+                                    <option value="date" {% if request.args.get('sort_by') == 'date' %}selected{% endif %}>Date Posted</option>
+                                    <option value="salary" {% if request.args.get('sort_by') == 'salary' %}selected{% endif %}>Salary</option>
+                                    <option value="match" {% if request.args.get('sort_by') == 'match' %}selected{% endif %}>Skill Match</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Match Percentage -->
+                            <div class="col-md-6">
+                                <label for="min_match" class="form-label">Minimum Skill Match (%)</label>
+                                <input type="range" class="form-range" id="min_match" name="min_match" 
+                                       min="0" max="100" value="{{ request.args.get('min_match', '0') }}"
+                                       oninput="this.nextElementSibling.value = this.value + '%'">
+                                <output>{{ request.args.get('min_match', '0') }}%</output>
+                            </div>
+                        </div>
+                        
+                        <!-- Filter Buttons -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-search me-2"></i>Search Jobs
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
+                                        <i class="bi bi-x-circle me-2"></i>Clear Filters
+                                    </button>
+                                    <button type="button" class="btn btn-outline-info" onclick="saveSearch()">
+                                        <i class="bi bi-bookmark me-2"></i>Save Search
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Results -->
+    <div class="row g-4">
+        {% if jobs %}
+            {% for job in jobs %}
+            <div class="col-lg-6 col-xl-4">
+                <div class="card h-100 shadow-sm job-card border-0" data-job-id="{{ job.id }}" style="cursor: pointer;">
+                    <div class="card-body p-4">
+                        <!-- Job Header -->
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="flex-grow-1">
+                                <h5 class="card-title fw-bold mb-1">{{ job.title }}</h5>
+                                <p class="text-muted mb-0">{{ job.company_name or 'Company' }}</p>
+                            </div>
+                            <span class="badge bg-primary">{{ job.job_type or 'Full-time' }}</span>
+                        </div>
+                        
+                        <!-- Location and Remote -->
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center text-muted mb-1">
+                                <i class="bi bi-geo-alt me-2"></i>
+                                <small>{{ job.location or 'Location not specified' }}</small>
+                            </div>
+                            {% if job.remote_work %}
+                            <div class="d-flex align-items-center text-info">
+                                <i class="bi bi-wifi me-2"></i>
+                                <small>{{ job.remote_work }}</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Salary Range -->
+                        {% if job.salary_min or job.salary_max %}
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center text-success">
+                                <i class="bi bi-cash me-2"></i>
+                                <small>
+                                    {% if job.salary_min and job.salary_max %}
+                                        ${{ "{:,}".format(job.salary_min) }} - ${{ "{:,}".format(job.salary_max) }}
+                                    {% elif job.salary_min %}
+                                        From ${{ "{:,}".format(job.salary_min) }}
+                                    {% elif job.salary_max %}
+                                        Up to ${{ "{:,}".format(job.salary_max) }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Job Description Preview -->
+                        <p class="card-text text-muted mb-3">
+                            {{ job.description[:120] }}{% if job.description|length > 120 %}...{% endif %}
+                        </p>
+                        
+                        <!-- Tags -->
+                        <div class="mb-3">
+                            <div class="d-flex flex-wrap gap-1">
+                                {% if job.experience_level %}
+                                <span class="badge bg-secondary">{{ job.experience_level }}</span>
+                                {% endif %}
+                                {% if job.industry %}
+                                <span class="badge bg-info">{{ job.industry }}</span>
+                                {% endif %}
+                                {% if job.remote_work %}
+                                <span class="badge bg-success">{{ job.remote_work }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-eye text-muted me-2"></i>
+                                <small class="text-muted">{{ job.views or 0 }} views</small>
+                            </div>
+                            <button class="btn btn-primary btn-sm apply-btn" data-job-id="{{ job.id }}" onclick="event.stopPropagation(); applyToJob({{ job.id }})">
+                                <i class="bi bi-send me-1"></i>Apply
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Posted Date -->
+                    <div class="card-footer bg-transparent border-0 pt-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-calendar me-1"></i>
+                                Posted {{ job.posted_date.strftime('%b %d') if job.posted_date else 'Recently' }}
+                            </small>
+                            {% if job.application_deadline %}
+                            <small class="text-warning">
+                                <i class="bi bi-clock me-1"></i>
+                                Deadline: {{ job.application_deadline.strftime('%b %d') }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="bi bi-search display-1 text-muted mb-3"></i>
+                    <h4 class="fw-bold mb-2">No Jobs Found</h4>
+                    <p class="text-muted">Try adjusting your search criteria or check back later for new opportunities.</p>
+                    <button class="btn btn-outline-primary" onclick="clearFilters()">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Clear Filters
+                    </button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Job Detail Modal -->
+<div class="modal fade" id="jobDetailModal" tabindex="-1" aria-labelledby="jobTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="jobTitle">Job Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="jobDetails">Loading...</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="applyBtn">Apply for this Job</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Make job cards clickable
+    const jobCards = document.querySelectorAll('.job-card');
+    jobCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            const jobId = this.getAttribute('data-job-id');
+            showJobDetails(jobId);
+        });
+    });
+    
+    // Check application status for all jobs
+    checkAllApplicationStatus();
+});
+
+function checkAllApplicationStatus() {
+    const applyButtons = document.querySelectorAll('.apply-btn');
+    applyButtons.forEach(button => {
+        const jobId = button.getAttribute('data-job-id');
+        checkApplicationStatus(jobId, button);
+    });
+}
+
+function checkApplicationStatus(jobId, button) {
+    fetch(`/check_application/${jobId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.has_applied) {
+                updateButtonToApplied(button);
+            }
+        })
+        .catch(error => {
+            console.error('Error checking application status:', error);
+        });
+}
+
+function updateButtonToApplied(button) {
+    button.innerHTML = '<i class="bi bi-check-circle me-1"></i>Applied';
+    button.className = 'btn btn-success btn-sm apply-btn';
+    button.disabled = true;
+    button.onclick = null; // Remove click handler
+}
+
+function showJobDetails(jobId) {
+    fetch(`/job/${jobId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('jobTitle').textContent = data.job.title;
+            document.getElementById('jobDetails').innerHTML = `
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6 class="fw-bold">Job Description:</h6>
+                        <p>${data.job.description}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="fw-bold">Job Details:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Company:</strong> ${data.job.company_name || 'Not specified'}</li>
+                            <li><strong>Location:</strong> ${data.job.location || 'Not specified'}</li>
+                            <li><strong>Type:</strong> ${data.job.job_type || 'Not specified'}</li>
+                            <li><strong>Remote:</strong> ${data.job.remote_work || 'Not specified'}</li>
+                            <li><strong>Experience:</strong> ${data.job.experience_level || 'Not specified'}</li>
+                            <li><strong>Industry:</strong> ${data.job.industry || 'Not specified'}</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('applyBtn').onclick = () => applyToJob(jobId);
+            
+            // Check if user has already applied to this job
+            fetch(`/check_application/${jobId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const modalApplyBtn = document.getElementById('applyBtn');
+                    if (data.has_applied) {
+                        modalApplyBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Already Applied';
+                        modalApplyBtn.className = 'btn btn-success';
+                        modalApplyBtn.disabled = true;
+                        modalApplyBtn.onclick = null;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking application status:', error);
+                });
+            
+            const modal = new bootstrap.Modal(document.getElementById('jobDetailModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error loading job details:', error);
+            alert('Error loading job details: ' + error.message);
+        });
+}
+
+function applyToJob(jobId) {
+    // Find the button for this job
+    const button = document.querySelector(`.apply-btn[data-job-id="${jobId}"]`);
+    
+    fetch(`/apply/${jobId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update button to show applied status
+            if (button) {
+                updateButtonToApplied(button);
+            }
+            
+            // Show success message
+            const successAlert = document.createElement('div');
+            successAlert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+            successAlert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            successAlert.innerHTML = `
+                <i class="bi bi-check-circle me-2"></i>${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(successAlert);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                if (successAlert.parentNode) {
+                    successAlert.remove();
+                }
+            }, 3000);
+            
+            const modalElement = document.getElementById('jobDetailModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            }
+        } else {
+            if (data.has_applied) {
+                // User has already applied, update button
+                if (button) {
+                    updateButtonToApplied(button);
+                }
+                
+                // Show info message instead of error
+                const infoAlert = document.createElement('div');
+                infoAlert.className = 'alert alert-info alert-dismissible fade show position-fixed';
+                infoAlert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                infoAlert.innerHTML = `
+                    <i class="bi bi-info-circle me-2"></i>You have already applied to this job
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(infoAlert);
+                
+                // Auto-remove after 3 seconds
+                setTimeout(() => {
+                    if (infoAlert.parentNode) {
+                        infoAlert.remove();
+                    }
+                }, 3000);
+            } else {
+                // Other error
+                alert(data.message || 'Error applying to job');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error applying to job:', error);
+        alert('Error applying to job: ' + error.message);
+    });
+}
+
+function clearFilters() {
+    document.getElementById('searchForm').reset();
+    window.location.href = window.location.pathname;
+}
+
+function saveSearch() {
+    const formData = new FormData(document.getElementById('searchForm'));
+    const params = new URLSearchParams(formData);
+    const searchUrl = window.location.pathname + '?' + params.toString();
+    
+    // Save to localStorage for demo purposes
+    localStorage.setItem('savedSearch', searchUrl);
+    alert('Search saved! You can access it later.');
+}
+</script>
+{% endblock %} 

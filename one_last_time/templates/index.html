@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="hero">
+  <h1><i class="bi bi-stars me-3"></i>AI-Powered Job Portal</h1>
+  <p>Revolutionary resume screening, intelligent job matching, and personalized career guidance.<br>Connect talent with opportunity through advanced AI technology.</p>
+  <div class="d-flex justify-content-center gap-3 flex-wrap">
+    <a href="{{ url_for('login') }}" class="btn btn-light btn-lg px-4 py-3 fw-bold" 
+       style="text-decoration: none; transition: all 0.3s ease;">
+      <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+    </a>
+    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-4 py-3 fw-bold" 
+       style="text-decoration: none; transition: all 0.3s ease;">
+      <i class="bi bi-person-plus me-2"></i>Get Started
+    </a>
+  </div>
+</div>
+
+<div class="row g-4 mt-4">
+  <div class="col-lg-4 col-md-6 mb-4">
+    <div class="card text-center p-4 h-100 feature-card" data-link="/upload_resume" style="cursor:pointer;">
+      <div class="mb-3">
+        <i class="bi bi-file-earmark-person-fill display-4"></i>
+      </div>
+      <h4 class="fw-bold mb-3">AI Resume Analysis</h4>
+      <p class="text-muted">Get instant, actionable feedback on your resume with advanced AI-powered analysis and ATS optimization.</p>
+    </div>
+  </div>
+  <div class="col-lg-4 col-md-6 mb-4">
+    <div class="card text-center p-4 h-100 feature-card" data-link="/jobs" style="cursor:pointer;">
+      <div class="mb-3">
+        <i class="bi bi-search display-4"></i>
+      </div>
+      <h4 class="fw-bold mb-3">Intelligent Job Matching</h4>
+      <p class="text-muted">AI-powered job recommendations based on your skills and experience, or find the perfect candidates for your positions.</p>
+    </div>
+  </div>
+  <div class="col-lg-4 col-md-6 mb-4">
+    <div class="card text-center p-4 h-100 feature-card" data-link="/counseling" style="cursor:pointer;">
+      <div class="mb-3">
+        <i class="bi bi-compass display-4"></i>
+      </div>
+      <h4 class="fw-bold mb-3">Career Guidance</h4>
+      <p class="text-muted">Personalized career advice with gap analysis and professional development recommendations.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Login/Register Modal -->
+<div class="modal fade" id="loginPromptModal" tabindex="-1" aria-labelledby="loginPromptLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="loginPromptLabel">Please Login or Register</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p class="mb-4">You need to be logged in to access this feature.</p>
+        <a href="/login" class="btn btn-primary me-2">Login</a>
+        <a href="/register" class="btn btn-outline-primary">Register</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mt-5">
+  <div class="col-12">
+    <div class="card p-4 text-center">
+      <h3 class="fw-bold mb-3">Why Choose Our Platform?</h3>
+      <div class="row g-3">
+        <div class="col-md-3">
+          <i class="bi bi-lightning-charge-fill text-warning display-6"></i>
+          <h6 class="mt-2">Lightning Fast</h6>
+        </div>
+        <div class="col-md-3">
+          <i class="bi bi-shield-check-fill text-success display-6"></i>
+          <h6 class="mt-2">Secure & Private</h6>
+        </div>
+        <div class="col-md-3">
+          <i class="bi bi-graph-up-arrow text-primary display-6"></i>
+          <h6 class="mt-2">Smart Analytics</h6>
+        </div>
+        <div class="col-md-3">
+          <i class="bi bi-people-fill text-info display-6"></i>
+          <h6 class="mt-2">Community Driven</h6>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const isAuthenticated = {{ 'true' if current_user.is_authenticated else 'false' }};
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Page loaded, checking buttons...');
+  
+  // Add hover effects to hero buttons
+  const heroButtons = document.querySelectorAll('.hero .btn');
+  console.log('Found hero buttons:', heroButtons.length);
+  
+  heroButtons.forEach((btn, index) => {
+    console.log(`Button ${index}:`, btn.href);
+    
+    btn.addEventListener('mouseover', function() {
+      this.style.transform = 'translateY(-2px)';
+      this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+    });
+    btn.addEventListener('mouseout', function() {
+      this.style.transform = 'translateY(0)';
+      this.style.boxShadow = '';
+    });
+    
+    // Add click event for debugging
+    btn.addEventListener('click', function(e) {
+      console.log('Button clicked:', this.href);
+      console.log('Button text:', this.textContent);
+    });
+  });
+
+  // Feature cards functionality
+  document.querySelectorAll('.feature-card').forEach(card => {
+    card.addEventListener('click', function() {
+      const link = this.getAttribute('data-link');
+      if (isAuthenticated) {
+        window.location.href = link;
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('loginPromptModal'));
+        modal.show();
+      }
+    });
+    card.addEventListener('mouseover', function() {
+      this.classList.add('shadow-lg');
+    });
+    card.addEventListener('mouseout', function() {
+      this.classList.remove('shadow-lg');
+    });
+  });
+});
+</script>
+{% endblock %}

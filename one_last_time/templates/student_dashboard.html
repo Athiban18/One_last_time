@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="text-center mb-5">
+  <h1 class="fw-bold mb-3">Welcome back, {{ current_user.username }}! 👋</h1>
+  <p class="text-muted fs-5">Your personalized AI-powered job portal dashboard</p>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="card text-center p-4 h-100 feature-card" data-link="/upload_resume" style="cursor:pointer;">
+      <div class="mb-3">
+        <i class="bi bi-file-earmark-person-fill display-4 text-primary"></i>
+      </div>
+      <h4 class="fw-bold mb-3">Upload Resume</h4>
+      <p class="text-muted">Upload your resume and get instant, actionable feedback powered by advanced AI algorithms.</p>
+    </div>
+  </div>
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="card text-center p-4 h-100 feature-card" data-link="/jobs" style="cursor:pointer;">
+      <div class="mb-3">
+        <i class="bi bi-search display-4 text-success"></i>
+      </div>
+      <h4 class="fw-bold mb-3">Smart Job Matching</h4>
+      <p class="text-muted">Find jobs that perfectly match your skills and interests with AI-powered recommendations.</p>
+    </div>
+  </div>
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="card text-center p-4 h-100 feature-card" data-link="/counseling" style="cursor:pointer;">
+      <div class="mb-3">
+        <i class="bi bi-compass display-4 text-warning"></i>
+      </div>
+      <h4 class="fw-bold mb-3">Career Counseling</h4>
+      <p class="text-muted">Get personalized career advice and resources to help you grow and succeed in your professional journey.</p>
+    </div>
+  </div>
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="card text-center p-4 h-100 feature-card" data-link="/analytics_dashboard" style="cursor:pointer;">
+      <div class="mb-3">
+        <i class="bi bi-bar-chart-fill display-4 text-info"></i>
+      </div>
+      <h4 class="fw-bold mb-3">Analytics Dashboard</h4>
+      <p class="text-muted">View your resume analytics, ATS scores, and performance insights to track your progress.</p>
+    </div>
+  </div>
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="card text-center p-4 h-100 feature-card" data-link="/my_applications" style="cursor:pointer;">
+      <div class="mb-3">
+        <i class="bi bi-clipboard-check display-4 text-success"></i>
+      </div>
+      <h4 class="fw-bold mb-3">Track Applications</h4>
+      <p class="text-muted">Monitor your job applications, track status updates, and manage your application history.</p>
+    </div>
+  </div>
+</div>
+
+<div class="row mt-5">
+  <div class="col-12">
+    <div class="card p-4">
+      <h4 class="fw-bold mb-3"><i class="bi bi-lightning-charge me-2"></i>Your Activity Statistics</h4>
+      <div class="row text-center">
+        <div class="col-md-3">
+          <div class="p-3">
+            <i class="bi bi-person-check text-primary display-5"></i>
+            <h6 class="mt-2">Total Logins</h6>
+            <p class="text-muted">{{ total_logins }} times</p>
+            <small class="text-success">+{{ recent_logins }} this week</small>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="p-3">
+            <i class="bi bi-file-earmark-text text-success display-5"></i>
+            <h6 class="mt-2">Resumes Uploaded</h6>
+            <p class="text-muted">{{ total_resumes }} files</p>
+            {% if latest_resume %}
+            <small class="text-info">Latest: {{ latest_resume.filename }}</small>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="p-3">
+            <i class="bi bi-briefcase text-warning display-5"></i>
+            <h6 class="mt-2">Applications</h6>
+            <p class="text-muted">{{ total_applications }} total</p>
+            <small class="text-success">+{{ recent_applications }} this month</small>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="p-3">
+            <i class="bi bi-bar-chart text-info display-5"></i>
+            <h6 class="mt-2">Avg ATS Score</h6>
+            <p class="text-muted">{{ "%.1f"|format(avg_ats_score) }}%</p>
+            <small class="text-primary">Resume Quality</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if last_activity %}
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card p-4">
+      <h5 class="fw-bold mb-3"><i class="bi bi-clock-history me-2"></i>Recent Activity</h5>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-calendar-check text-success me-3"></i>
+            <div>
+              <h6 class="mb-1">Last Login</h6>
+              <p class="text-muted mb-0">{{ last_activity.strftime('%B %d, %Y at %I:%M %p') }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-graph-up text-primary me-3"></i>
+            <div>
+              <h6 class="mb-1">Activity Streak</h6>
+              <p class="text-muted mb-0">{{ recent_logins }} days this week</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.feature-card').forEach(card => {
+    card.addEventListener('click', function() {
+      const link = this.getAttribute('data-link');
+      window.location.href = link;
+    });
+    card.addEventListener('mouseover', function() {
+      this.classList.add('shadow-lg');
+    });
+    card.addEventListener('mouseout', function() {
+      this.classList.remove('shadow-lg');
+    });
+  });
+});
+</script>
+{% endblock %} 

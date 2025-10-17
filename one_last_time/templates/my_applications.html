@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">📋 My Applications</h2>
+    
+    <!-- Application Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Total Applications</h5>
+                    <h3 class="card-text">{{ total_applications }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Pending Applications</h5>
+                    <h3 class="card-text">{{ pending_applications }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Recent Applications</h5>
+                    <h3 class="card-text">{{ recent_applications }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if applications %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Company</th>
+                        <th>Applied Date</th>
+                        <th>Days Since Applied</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app_data in applications %}
+                    <tr>
+                        <td>
+                            <strong>{{ app_data.job.title }}</strong>
+                        </td>
+                        <td>
+                            {% if app_data.employer %}
+                                {{ app_data.employer.username }}
+                            {% else %}
+                                <span class="text-muted">Unknown</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ app_data.application.applied_at.strftime('%Y-%m-%d %H:%M') }}
+                        </td>
+                        <td>
+                            {% if app_data.days_since_applied == 0 %}
+                                <span class="badge badge-info">Today</span>
+                            {% elif app_data.days_since_applied == 1 %}
+                                <span class="badge badge-info">Yesterday</span>
+                            {% else %}
+                                <span class="badge badge-secondary">{{ app_data.days_since_applied }} days ago</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if app_data.application.status == 'applied' %}
+                                <span class="badge badge-warning">Applied</span>
+                            {% elif app_data.application.status == 'reviewed' %}
+                                <span class="badge badge-info">Under Review</span>
+                            {% elif app_data.application.status == 'interview' %}
+                                <span class="badge badge-primary">Interview</span>
+                            {% elif app_data.application.status == 'accepted' %}
+                                <span class="badge badge-success">Accepted</span>
+                            {% elif app_data.application.status == 'rejected' %}
+                                <span class="badge badge-danger">Rejected</span>
+                            {% else %}
+                                <span class="badge badge-secondary">{{ app_data.application.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="showJobDetails({{ app_data.job.id }})">
+                                View Job
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <div class="alert alert-info">
+                <h4>No Applications Yet</h4>
+                <p>You haven't applied to any jobs yet. Start by browsing available positions!</p>
+                <a href="{{ url_for('jobs') }}" class="btn btn-primary">Browse Jobs</a>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Application Tips -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>💡 Application Tracking Tips</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li>✅ <strong>Follow up</strong> on applications after 1-2 weeks</li>
+                        <li>✅ <strong>Keep track</strong> of application dates and company responses</li>
+                        <li>✅ <strong>Prepare</strong> for interviews by researching the company</li>
+                        <li>✅ <strong>Network</strong> with professionals in your target industry</li>
+                        <li>✅ <strong>Improve</strong> your resume based on feedback</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Job Detail Modal -->
+<div class="modal fade" id="jobDetailModal" tabindex="-1" aria-labelledby="jobTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="jobTitle">Job Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="jobDetails">Loading...</div>
+                <div id="skillAnalysis" class="mt-4"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" id="applyBtn">Apply for this Job</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showJobDetails(jobId) {
+    console.log('Fetching job details for ID:', jobId);
+    
+    fetch(`/job/${jobId}`)
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Job data received:', data);
+            
+            document.getElementById('jobTitle').textContent = data.job.title;
+            document.getElementById('jobDetails').innerHTML = `
+                <h6 class="fw-bold">Job Description:</h6>
+                <p>${data.job.description}</p>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Required Skills:</h6>
+                        <div class="d-flex flex-wrap gap-1">
+                            ${data.required_skills.map(skill => `<span class="badge bg-primary">${skill}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Your Skills Match:</h6>
+                        <div class="d-flex flex-wrap gap-1">
+                            ${data.matching_skills.map(skill => `<span class="badge bg-success">${skill}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Job Details:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Company:</strong> ${data.job.company_name || 'Not specified'}</li>
+                            <li><strong>Location:</strong> ${data.job.location || 'Not specified'}</li>
+                            <li><strong>Type:</strong> ${data.job.job_type || 'Not specified'}</li>
+                            <li><strong>Remote:</strong> ${data.job.remote_work || 'Not specified'}</li>
+                            <li><strong>Experience:</strong> ${data.job.experience_level || 'Not specified'}</li>
+                            <li><strong>Industry:</strong> ${data.job.industry || 'Not specified'}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Salary & Benefits:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Salary Range:</strong> 
+                                ${data.job.salary_min && data.job.salary_max ? 
+                                    `$${data.job.salary_min.toLocaleString()} - $${data.job.salary_max.toLocaleString()}` : 
+                                    'Not specified'}
+                            </li>
+                            <li><strong>Views:</strong> ${data.job.views || 0}</li>
+                            <li><strong>Requirements:</strong> ${data.job.requirements || 'Not specified'}</li>
+                            <li><strong>Benefits:</strong> ${data.job.benefits || 'Not specified'}</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            // Skill gap analysis
+            if (data.missing_skills.length > 0) {
+                document.getElementById('skillAnalysis').innerHTML = `
+                    <div class="alert alert-warning">
+                        <h6 class="fw-bold"><i class="bi bi-exclamation-triangle me-2"></i>Skills You Need to Learn:</h6>
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            ${data.missing_skills.map(skill => `<span class="badge bg-warning text-dark">${skill}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('skillAnalysis').innerHTML = `
+                    <div class="alert alert-success">
+                        <h6 class="fw-bold"><i class="bi bi-check-circle me-2"></i>Great Match!</h6>
+                        <p class="mb-0">You have all the required skills for this position.</p>
+                    </div>
+                `;
+            }
+            
+            // Since this is in my applications, the user has already applied
+            const modalApplyBtn = document.getElementById('applyBtn');
+            modalApplyBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Already Applied';
+            modalApplyBtn.className = 'btn btn-success';
+            modalApplyBtn.disabled = true;
+            modalApplyBtn.onclick = null;
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('jobDetailModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error loading job details:', error);
+            alert('Error loading job details: ' + error.message);
+        });
+}
+</script>
+
+<style>
+.card {
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.badge {
+    font-size: 0.8em;
+    padding: 0.5em 0.8em;
+}
+
+.table th {
+    background-color: #343a40;
+    color: white;
+    border: none;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %} 

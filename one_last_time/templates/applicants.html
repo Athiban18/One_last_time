@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="mb-4">
+  <h2 class="fw-bold mb-2"><i class="bi bi-people-fill text-success me-2"></i>Smart Applicant Matching</h2>
+  <p class="text-muted">Applicants are ranked by skill match percentage for each job</p>
+</div>
+
+<!-- AI Shortlisting Action -->
+<div class="mb-4">
+  <div class="alert alert-info">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h6 class="mb-1"><i class="bi bi-robot me-2"></i>AI Resume Shortlisting Available</h6>
+        <p class="mb-0">Use AI to automatically rank and shortlist applicants based on job description match</p>
+      </div>
+      <div>
+        {% for job in jobs %}
+          {% if job_applicants[job.id] %}
+            <a href="{{ url_for('shortlist_applicants', job_id=job.id) }}" class="btn btn-primary btn-sm">
+              <i class="bi bi-robot me-1"></i>Shortlist for {{ job.title }}
+            </a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if jobs %}
+  {% for job in jobs %}
+    {% if job_applicants[job.id] %}
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+          <i class="bi bi-briefcase me-2"></i>{{ job.title }}
+          <span class="badge bg-light text-dark ms-2">{{ job_applicants[job.id]|length }} applicants</span>
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Rank</th>
+                <th>Applicant</th>
+                <th>Skill Match</th>
+                <th>Matching Skills</th>
+                <th>Missing Skills</th>
+                <th>Applied Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for applicant in job_applicants[job.id] %}
+              <tr>
+                <td>
+                  {% if applicant.match_percentage >= 70 %}
+                    <span class="badge bg-success">#{{ loop.index }}</span>
+                  {% elif applicant.match_percentage >= 30 %}
+                    <span class="badge bg-warning text-dark">#{{ loop.index }}</span>
+                  {% else %}
+                    <span class="badge bg-secondary">#{{ loop.index }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <strong>{{ applicant.user.username }}</strong>
+                  {% if applicant.user.resume %}
+                    <br><small class="text-success"><i class="bi bi-file-earmark-check me-1"></i>Has Resume</small>
+                  {% else %}
+                    <br><small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>No Resume</small>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if applicant.match_percentage >= 70 %}
+                    <span class="badge bg-success">{{ "%.0f"|format(applicant.match_percentage) }}%</span>
+                  {% elif applicant.match_percentage >= 30 %}
+                    <span class="badge bg-warning text-dark">{{ "%.0f"|format(applicant.match_percentage) }}%</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ "%.0f"|format(applicant.match_percentage) }}%</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="d-flex flex-wrap gap-1">
+                    {% for skill in applicant.matching_skills[:3] %}
+                      <span class="badge bg-success">{{ skill }}</span>
+                    {% endfor %}
+                    {% if applicant.matching_skills|length > 3 %}
+                      <span class="badge bg-secondary">+{{ applicant.matching_skills|length - 3 }}</span>
+                    {% endif %}
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex flex-wrap gap-1">
+                    {% for skill in applicant.missing_skills[:3] %}
+                      <span class="badge bg-warning text-dark">{{ skill }}</span>
+                    {% endfor %}
+                    {% if applicant.missing_skills|length > 3 %}
+                      <span class="badge bg-secondary">+{{ applicant.missing_skills|length - 3 }}</span>
+                    {% endif %}
+                  </div>
+                </td>
+                <td>
+                  <small class="text-muted">
+                    {{ applicant.app.applied_at.strftime('%Y-%m-%d %H:%M') }}
+                  </small>
+                </td>
+                <td>
+                  {% if applicant.app.status == 'applied' %}
+                    <span class="badge bg-warning">Applied</span>
+                  {% elif applicant.app.status == 'reviewed' %}
+                    <span class="badge bg-info">Under Review</span>
+                  {% elif applicant.app.status == 'interview' %}
+                    <span class="badge bg-primary">Interview</span>
+                  {% elif applicant.app.status == 'accepted' %}
+                    <span class="badge bg-success">Accepted</span>
+                  {% elif applicant.app.status == 'rejected' %}
+                    <span class="badge bg-danger">Rejected</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ applicant.app.status }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="card mb-4 border-warning">
+      <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">
+          <i class="bi bi-briefcase me-2"></i>{{ job.title }}
+        </h5>
+      </div>
+      <div class="card-body text-center">
+        <i class="bi bi-people display-4 text-muted mb-3"></i>
+        <h5 class="text-muted">No Applicants Yet</h5>
+        <p class="text-muted">This job hasn't received any applications yet.</p>
+      </div>
+    </div>
+    {% endif %}
+  {% endfor %}
+{% else %}
+<div class="text-center py-5">
+  <i class="bi bi-briefcase display-1 text-muted mb-3"></i>
+  <h4 class="fw-bold mb-2">No Jobs Posted</h4>
+  <p class="text-muted">You haven't posted any jobs yet. Start by creating a job posting!</p>
+  <a href="{{ url_for('post_job') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle me-1"></i>Post a Job
+  </a>
+</div>
+{% endif %}
+
+<style>
+.card {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.badge {
+  font-size: 0.8em;
+  padding: 0.5em 0.8em;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+</style>
+{% endblock %}

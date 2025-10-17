@@ -1,0 +1,639 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Job Portal - Database Report</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #2980b9;
+            margin-top: 25px;
+        }
+        .info-box {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .table-section {
+            margin: 30px 0;
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .table-header {
+            background: #3498db;
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .table-content {
+            padding: 20px;
+        }
+        .column-list {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .column-item {
+            margin: 5px 0;
+            padding: 5px 10px;
+            background: white;
+            border-left: 3px solid #3498db;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .data-table th {
+            background: #34495e;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        .data-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .data-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        .relationship-diagram {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .relationship-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #e74c3c;
+        }
+        .timestamp {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            margin-top: 30px;
+        }
+        .export-btn {
+            background: #27ae60;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        .export-btn:hover {
+            background: #229954;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Job Portal - Database Report</h1>
+        
+        <div class="info-box">
+            <h3>📁 Database Information</h3>
+            <p><strong>Location:</strong> C:\Users\HP\Downloads\one_last_time (1)\one_last_time\instance\jobportal.db</p>
+            <p><strong>File Size:</strong> 36864 bytes</p>
+            <p><strong>Last Modified:</strong> 2025-08-06 22:51:08.929380</p>
+        </div>
+        
+        <h2>📋 Database Tables</h2>
+        <p>The database contains the following tables:</p>
+        <ul>
+            <li><strong>user</strong></li>
+            <li><strong>job</strong></li>
+            <li><strong>login_history</strong></li>
+            <li><strong>resume_upload</strong></li>
+            <li><strong>employer_stats</strong></li>
+            <li><strong>application</strong></li>
+            <li><strong>job_view</strong></li>
+
+        </ul>
+        
+        <h2>📊 Detailed Table Structure</h2>
+
+        <div class="table-section">
+            <div class="table-header">
+                📊 Table: USER
+            </div>
+            <div class="table-content">
+                <h3>📝 Columns (8 total)</h3>
+                <div class="column-list">
+
+                    <div class="column-item">
+                        <strong>id</strong> (INTEGER) NOT NULL 🔑
+                    </div>
+
+                    <div class="column-item">
+                        <strong>username</strong> (VARCHAR(150)) NOT NULL
+                    </div>
+
+                    <div class="column-item">
+                        <strong>password</strong> (VARCHAR(150)) NOT NULL
+                    </div>
+
+                    <div class="column-item">
+                        <strong>user_type</strong> (VARCHAR(20)) NOT NULL
+                    </div>
+
+                    <div class="column-item">
+                        <strong>resume</strong> (VARCHAR(200))
+                    </div>
+
+                    <div class="column-item">
+                        <strong>created_at</strong> (DATETIME)
+                    </div>
+
+                    <div class="column-item">
+                        <strong>last_login</strong> (DATETIME)
+                    </div>
+
+                    <div class="column-item">
+                        <strong>is_active</strong> (BOOLEAN)
+                    </div>
+
+                </div>
+                
+                <h3>📈 Data Statistics</h3>
+                <p><strong>Total Rows:</strong> 1</p>
+
+                <h3>📄 Sample Data (First 1 rows)</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>id</th>
+                            <th>username</th>
+                            <th>password</th>
+                            <th>user_type</th>
+                            <th>resume</th>
+                            <th>created_at</th>
+                            <th>last_login</th>
+                            <th>is_active</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>athiban</td>
+                            <td>scrypt:32768:8:1$7GRAt23aB7LpbU5r$81fac2c8483eb412...</td>
+                            <td>student</td>
+                            <td>resume_demo2.pdf</td>
+                            <td>2025-08-06 17:08:47.068658</td>
+                            <td>2025-08-06 17:08:56.372246</td>
+                            <td>1</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+        <div class="table-section">
+            <div class="table-header">
+                📊 Table: JOB
+            </div>
+            <div class="table-content">
+                <h3>📝 Columns (5 total)</h3>
+                <div class="column-list">
+
+                    <div class="column-item">
+                        <strong>id</strong> (INTEGER) NOT NULL 🔑
+                    </div>
+
+                    <div class="column-item">
+                        <strong>title</strong> (VARCHAR(150)) NOT NULL
+                    </div>
+
+                    <div class="column-item">
+                        <strong>description</strong> (TEXT) NOT NULL
+                    </div>
+
+                    <div class="column-item">
+                        <strong>employer_id</strong> (INTEGER) NOT NULL
+                    </div>
+
+                    <div class="column-item">
+                        <strong>views</strong> (INTEGER)
+                    </div>
+
+                </div>
+                
+                <h3>📈 Data Statistics</h3>
+                <p><strong>Total Rows:</strong> 1</p>
+
+                <h3>📄 Sample Data (First 1 rows)</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>id</th>
+                            <th>title</th>
+                            <th>description</th>
+                            <th>employer_id</th>
+                            <th>views</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Python Developer</td>
+                            <td>We are looking for a Python developer with experie...</td>
+                            <td>1</td>
+                            <td>0</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+        <div class="table-section">
+            <div class="table-header">
+                📊 Table: LOGIN_HISTORY
+            </div>
+            <div class="table-content">
+                <h3>📝 Columns (4 total)</h3>
+                <div class="column-list">
+
+                    <div class="column-item">
+                        <strong>id</strong> (INTEGER) NOT NULL 🔑
+                    </div>
+
+                    <div class="column-item">
+                        <strong>user_id</strong> (INTEGER) NOT NULL
+                    </div>
+
+                    <div class="column-item">
+                        <strong>login_time</strong> (DATETIME)
+                    </div>
+
+                    <div class="column-item">
+                        <strong>ip_address</strong> (VARCHAR(45))
+                    </div>
+
+                </div>
+                
+                <h3>📈 Data Statistics</h3>
+                <p><strong>Total Rows:</strong> 1</p>
+
+                <h3>📄 Sample Data (First 1 rows)</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>id</th>
+                            <th>user_id</th>
+                            <th>login_time</th>
+                            <th>ip_address</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>1</td>
+                            <td>2025-08-06 17:08:56.380132</td>
+                            <td>127.0.0.1</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+        <div class="table-section">
+            <div class="table-header">
+                📊 Table: RESUME_UPLOAD
+            </div>
+            <div class="table-content">
+                <h3>📝 Columns (6 total)</h3>
+                <div class="column-list">
+
+                    <div class="column-item">
+                        <strong>id</strong> (INTEGER) NOT NULL 🔑
+                    </div>
+
+                    <div class="column-item">
+                        <strong>user_id</strong> (INTEGER) NOT NULL
+                    </div>
+
+                    <div class="column-item">
+                        <strong>filename</strong> (VARCHAR(200)) NOT NULL
+                    </div>
+
+                    <div class="column-item">
+                        <strong>upload_time</strong> (DATETIME)
+                    </div>
+
+                    <div class="column-item">
+                        <strong>file_size</strong> (INTEGER)
+                    </div>
+
+                    <div class="column-item">
+                        <strong>ats_score</strong> (FLOAT)
+                    </div>
+
+                </div>
+                
+                <h3>📈 Data Statistics</h3>
+                <p><strong>Total Rows:</strong> 1</p>
+
+                <h3>📄 Sample Data (First 1 rows)</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>id</th>
+                            <th>user_id</th>
+                            <th>filename</th>
+                            <th>upload_time</th>
+                            <th>file_size</th>
+                            <th>ats_score</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>1</td>
+                            <td>resume_demo2.pdf</td>
+                            <td>2025-08-06 17:21:08.922904</td>
+                            <td>86844</td>
+                            <td>85.0</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+        <div class="table-section">
+            <div class="table-header">
+                📊 Table: EMPLOYER_STATS
+            </div>
+            <div class="table-content">
+                <h3>📝 Columns (7 total)</h3>
+                <div class="column-list">
+
+                    <div class="column-item">
+                        <strong>id</strong> (INTEGER) NOT NULL 🔑
+                    </div>
+
+                    <div class="column-item">
+                        <strong>employer_id</strong> (INTEGER) NOT NULL
+                    </div>
+
+                    <div class="column-item">
+                        <strong>total_jobs_posted</strong> (INTEGER)
+                    </div>
+
+                    <div class="column-item">
+                        <strong>total_applications_received</strong> (INTEGER)
+                    </div>
+
+                    <div class="column-item">
+                        <strong>total_job_views</strong> (INTEGER)
+                    </div>
+
+                    <div class="column-item">
+                        <strong>last_job_posted</strong> (DATETIME)
+                    </div>
+
+                    <div class="column-item">
+                        <strong>last_updated</strong> (DATETIME)
+                    </div>
+
+                </div>
+                
+                <h3>📈 Data Statistics</h3>
+                <p><strong>Total Rows:</strong> 0</p>
+
+            </div>
+        </div>
+
+        <div class="table-section">
+            <div class="table-header">
+                📊 Table: APPLICATION
+            </div>
+            <div class="table-content">
+                <h3>📝 Columns (5 total)</h3>
+                <div class="column-list">
+
+                    <div class="column-item">
+                        <strong>id</strong> (INTEGER) NOT NULL 🔑
+                    </div>
+
+                    <div class="column-item">
+                        <strong>user_id</strong> (INTEGER) NOT NULL
+                    </div>
+
+                    <div class="column-item">
+                        <strong>job_id</strong> (INTEGER) NOT NULL
+                    </div>
+
+                    <div class="column-item">
+                        <strong>status</strong> (VARCHAR(50))
+                    </div>
+
+                    <div class="column-item">
+                        <strong>applied_at</strong> (DATETIME)
+                    </div>
+
+                </div>
+                
+                <h3>📈 Data Statistics</h3>
+                <p><strong>Total Rows:</strong> 1</p>
+
+                <h3>📄 Sample Data (First 1 rows)</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>id</th>
+                            <th>user_id</th>
+                            <th>job_id</th>
+                            <th>status</th>
+                            <th>applied_at</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>1</td>
+                            <td>1</td>
+                            <td>applied</td>
+                            <td>2025-08-06 17:20:51.070427</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+        <div class="table-section">
+            <div class="table-header">
+                📊 Table: JOB_VIEW
+            </div>
+            <div class="table-content">
+                <h3>📝 Columns (5 total)</h3>
+                <div class="column-list">
+
+                    <div class="column-item">
+                        <strong>id</strong> (INTEGER) NOT NULL 🔑
+                    </div>
+
+                    <div class="column-item">
+                        <strong>job_id</strong> (INTEGER) NOT NULL
+                    </div>
+
+                    <div class="column-item">
+                        <strong>viewer_id</strong> (INTEGER) NOT NULL
+                    </div>
+
+                    <div class="column-item">
+                        <strong>view_time</strong> (DATETIME)
+                    </div>
+
+                    <div class="column-item">
+                        <strong>ip_address</strong> (VARCHAR(45))
+                    </div>
+
+                </div>
+                
+                <h3>📈 Data Statistics</h3>
+                <p><strong>Total Rows:</strong> 0</p>
+
+            </div>
+        </div>
+
+        <h2>🔗 Database Relationships</h2>
+        <div class="relationship-diagram">
+            <div class="relationship-item">• user → job (employer_id)</div>
+            <div class="relationship-item">• user → application (user_id)</div>
+            <div class="relationship-item">• user → login_history (user_id)</div>
+            <div class="relationship-item">• user → resume_upload (user_id)</div>
+            <div class="relationship-item">• user → job_view (viewer_id)</div>
+            <div class="relationship-item">• user → employer_stats (employer_id)</div>
+            <div class="relationship-item">• job → application (job_id)</div>
+            <div class="relationship-item">• job → job_view (job_id)</div>
+
+        </div>
+        
+        <h2>📈 Database Statistics</h2>
+        <div class="stats-grid">
+
+            <div class="stat-card">
+                <div class="stat-number">1</div>
+                <div class="stat-label">👥 Total Users</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-number">1</div>
+                <div class="stat-label">🎓 Students</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-number">0</div>
+                <div class="stat-label">💼 Employers</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-number">1</div>
+                <div class="stat-label">💼 Total Jobs</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-number">0</div>
+                <div class="stat-label">👀 Job Views</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-number">1</div>
+                <div class="stat-label">📝 Applications</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-number">1</div>
+                <div class="stat-label">🔐 Logins</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-number">1</div>
+                <div class="stat-label">📄 Resume Uploads</div>
+            </div>
+
+        </div>
+        
+        <div class="timestamp">
+            Report generated on: 2025-08-06 22:57:45
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="export-btn" onclick="window.print()">🖨️ Print/Save as PDF</button>
+        </div>
+    </div>
+</body>
+</html>
