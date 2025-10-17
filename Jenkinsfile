@@ -4,7 +4,7 @@ pipeline {
     environment {
         // Configure these in Jenkins Credentials and Global Env
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
-        DOCKERHUB_NAMESPACE   = "athiban18"   // change if different
+        DOCKERHUB_NAMESPACE   = "cheenu181"   // change if different
         APP_NAME              = "one_last_time"
         IMAGE_TAG             = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
