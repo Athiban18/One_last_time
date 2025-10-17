@@ -2,9 +2,8 @@ pipeline {
     agent any
 
     environment {
-        // Configure these in Jenkins Credentials and Global Env
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
-        DOCKERHUB_NAMESPACE   = "cheenu181"   // your DockerHub username
+        DOCKERHUB_NAMESPACE   = "cheenu181"
         APP_NAME              = "one_last_time"
         IMAGE_TAG             = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
@@ -15,7 +14,6 @@ pipeline {
     }
 
     triggers {
-        // Build when GitHub push happens (use GitHub plugin / webhook)
         pollSCM('')
     }
 
@@ -28,21 +26,28 @@ pipeline {
 
         stage('Set up Python (lint/test)') {
             steps {
-                sh 'python --version || true'
-                sh 'pip --version || true'
+                sh 'python3 --version'
+                sh 'pip3 --version'
             }
         }
 
         stage('Install deps (optional)') {
             steps {
-                sh 'python -m pip install --upgrade pip || true'
-                sh 'pip install -r one_last_time/requirements.txt || true'
+                sh '''
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip install --upgrade pip
+                    pip install -r one_last_time/requirements.txt
+                '''
             }
         }
 
         stage('Smoke test build') {
             steps {
-                sh 'python -m py_compile one_last_time/*.py || true'
+                sh '''
+                    . venv/bin/activate
+                    python -m py_compile one_last_time/*.py
+                '''
             }
         }
 
@@ -61,9 +66,9 @@ pipeline {
                     def image = "${DOCKERHUB_NAMESPACE}/${APP_NAME}:${IMAGE_TAG}"
                     sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
                     sh "docker push ${image}"
-                    // Also tag 'latest'
                     sh "docker tag ${image} ${DOCKERHUB_NAMESPACE}/${APP_NAME}:latest"
                     sh "docker push ${DOCKERHUB_NAMESPACE}/${APP_NAME}:latest"
+                    sh 'docker logout'
                 }
             }
         }
@@ -75,10 +80,6 @@ pipeline {
         }
         failure {
             echo '❌ Build failed.'
-        }
-        always {
-            echo "Logging out from DockerHub..."
-            sh 'docker logout || true'
         }
     }
 }
