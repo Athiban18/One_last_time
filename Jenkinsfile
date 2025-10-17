@@ -4,7 +4,7 @@ pipeline {
     environment {
         // Configure these in Jenkins Credentials and Global Env
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
-        DOCKERHUB_NAMESPACE   = "cheenu181"
+        DOCKERHUB_NAMESPACE   = "cheenu181"   // your DockerHub username
         APP_NAME              = "one_last_time"
         IMAGE_TAG             = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
@@ -15,7 +15,7 @@ pipeline {
     }
 
     triggers {
-        // Trigger build on GitHub push (via webhook)
+        // Build when GitHub push happens (use GitHub plugin / webhook)
         pollSCM('')
     }
 
@@ -33,14 +33,14 @@ pipeline {
             }
         }
 
-        stage('Install dependencies') {
+        stage('Install deps (optional)') {
             steps {
                 sh 'python -m pip install --upgrade pip || true'
                 sh 'pip install -r one_last_time/requirements.txt || true'
             }
         }
 
-        stage('Smoke test') {
+        stage('Smoke test build') {
             steps {
                 sh 'python -m py_compile one_last_time/*.py || true'
             }
@@ -59,13 +59,9 @@ pipeline {
             steps {
                 script {
                     def image = "${DOCKERHUB_NAMESPACE}/${APP_NAME}:${IMAGE_TAG}"
-                    echo "Logging in to DockerHub..."
                     sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
-
-                    echo "Pushing image ${image}..."
                     sh "docker push ${image}"
-
-                    echo "Tagging latest..."
+                    // Also tag 'latest'
                     sh "docker tag ${image} ${DOCKERHUB_NAMESPACE}/${APP_NAME}:latest"
                     sh "docker push ${DOCKERHUB_NAMESPACE}/${APP_NAME}:latest"
                 }
@@ -81,10 +77,8 @@ pipeline {
             echo '❌ Build failed.'
         }
         always {
-            node {
-                echo "Logging out from DockerHub..."
-                sh 'docker logout || true'
-            }
+            echo "Logging out from DockerHub..."
+            sh 'docker logout || true'
         }
     }
 }
