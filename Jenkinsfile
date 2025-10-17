@@ -4,7 +4,7 @@ pipeline {
     environment {
         // Configure these in Jenkins Credentials and Global Env
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
-        DOCKERHUB_NAMESPACE   = "cheenu181"   // change if different
+        DOCKERHUB_NAMESPACE   = "cheenu181"
         APP_NAME              = "one_last_time"
         IMAGE_TAG             = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
@@ -15,7 +15,7 @@ pipeline {
     }
 
     triggers {
-        // Build when GitHub push happens (use GitHub plugin / webhook)
+        // Trigger build on GitHub push (via webhook)
         pollSCM('')
     }
 
@@ -33,14 +33,14 @@ pipeline {
             }
         }
 
-        stage('Install deps (optional)') {
+        stage('Install dependencies') {
             steps {
                 sh 'python -m pip install --upgrade pip || true'
                 sh 'pip install -r one_last_time/requirements.txt || true'
             }
         }
 
-        stage('Smoke test build') {
+        stage('Smoke test') {
             steps {
                 sh 'python -m py_compile one_last_time/*.py || true'
             }
@@ -59,9 +59,13 @@ pipeline {
             steps {
                 script {
                     def image = "${DOCKERHUB_NAMESPACE}/${APP_NAME}:${IMAGE_TAG}"
+                    echo "Logging in to DockerHub..."
                     sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+
+                    echo "Pushing image ${image}..."
                     sh "docker push ${image}"
-                    // Also tag 'latest'
+
+                    echo "Tagging latest..."
                     sh "docker tag ${image} ${DOCKERHUB_NAMESPACE}/${APP_NAME}:latest"
                     sh "docker push ${DOCKERHUB_NAMESPACE}/${APP_NAME}:latest"
                 }
@@ -71,15 +75,16 @@ pipeline {
 
     post {
         success {
-            echo 'Build and push succeeded.'
+            echo '✅ Build and push succeeded.'
         }
         failure {
-            echo 'Build failed.'
+            echo '❌ Build failed.'
         }
         always {
-            sh 'docker logout || true'
+            node {
+                echo "Logging out from DockerHub..."
+                sh 'docker logout || true'
+            }
         }
     }
 }
-
-
